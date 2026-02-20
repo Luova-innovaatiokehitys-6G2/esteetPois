@@ -1,16 +1,33 @@
-import { Text, View } from "react-native";
+import { Camera, MapView } from '@rnmapbox/maps';
+import { Platform, StyleSheet } from 'react-native';
 
-
-export default function Index() {
+const App = () => {
   return (
-    <View
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center",
-      }}
+    <MapView
+      styleURL={"mapbox://styles/mapbox/standard"}
+      style={styles.map}
+      projection='globe'
+      scaleBarEnabled={false}
+      logoPosition={Platform.OS === 'android' ? { bottom: 40, left: 10 } : undefined}
+      attributionPosition={Platform.OS === 'android' ? { bottom: 40, right: 10 } : undefined}
     >
-      <Text>TEST!</Text>
-    </View>
+      <Camera
+        defaultSettings={{
+          centerCoordinate: [-43.2268, -22.9358],
+          zoomLevel: 12.1,
+          pitch: 70,
+          heading: -161.81,
+        }}
+      />
+    </MapView>
   );
-}
+};
+
+const styles = StyleSheet.create({
+  map: {
+    flex: 1,
+    width: '100%',
+  },
+});
+
+export default App;
