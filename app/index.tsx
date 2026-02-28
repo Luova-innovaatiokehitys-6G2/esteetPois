@@ -1,6 +1,7 @@
 import {
   Camera,
-  MapView
+  MapView,
+  LocationPuck
 } from '@rnmapbox/maps';
 
 import {
@@ -14,9 +15,11 @@ import useUserCurrentLocation from './hooks/userCurrentLocation';
 import Loading from './loading';
 
 const Map = () => {
+  // Get user's current location
   const { location } = useUserCurrentLocation();
   console.log("fetch", location?.coords.latitude, location?.coords.longitude);
-  return location ? (
+  // Render the map centered on user's location
+  return location ? ( 
     <View style={{ flex: 1 }}>
       <MapView
         styleURL={"mapbox://styles/mapbox/standard"}
@@ -35,8 +38,13 @@ const Map = () => {
           }}
           centerCoordinate={[location.coords.longitude, location.coords.latitude]}
         />
+        <LocationPuck
+        bearingImage='../assets/images/location_indicator.png'
+        puckBearing='course'
+        puckBearingEnabled={true}
+        visible={true}
+        />
       </MapView>
-
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
