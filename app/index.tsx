@@ -21,19 +21,23 @@ const Map = () => {
   const { location } = useUserCurrentLocation();
 
   // Set initial location
-  const lon = location?.coords.longitude || 0;
-  const lat = location?.coords.latitude || 0;
+  const lon = location?.coords.longitude ?? 0;
+  const lat = location?.coords.latitude ?? 0;
 
-  console.log("fetch", lat, lon);
+  // Make sure location has been fetched
+  const locationFetched = lon !== 0 && lat !== 0;
 
-  // mutable ref to the Camera component to control the map's camera
+  console.log("Fetched location:", lat, lon)
+  console.log("locationfetched:", locationFetched)
+
+  // Mutable ref to the Camera component to control the map's camera
   const camera = useRef<Camera>(null);
 
   useEffect(() => {
-    camera.current?.setCamera({
+    camera.current?.setCamera({ 
       centerCoordinate: [lon, lat],
-      zoomLevel: 16,
-      pitch: 70,
+      zoomLevel: 17,
+      pitch: 64,
       heading: -161.81,
       animationDuration: 1000,
     });
@@ -42,17 +46,25 @@ const Map = () => {
   // Render the map centered on user's location
   // Display a loading screen until location is available
   // Show user's location with heading arrow
-  return location ? (
+  return locationFetched ? (
     <SafeAreaView style={{ flex: 1 }}>
       <MapView
         styleURL={"mapbox://styles/mapbox/standard"}
         style={styles.map}
         projection='globe'
         scaleBarEnabled={true}
-        logoPosition={Platform.OS === 'android' ? { bottom: 40, left: 10 } : undefined}
-        attributionPosition={Platform.OS === 'android' ? { bottom: 40, right: 10 } : undefined}
+        scaleBarPosition={{ top: 8, left: 100 }}
+        logoPosition={Platform.OS === 'android' ? { bottom: 40, left: 8 } : undefined}
+        attributionPosition={Platform.OS === 'android' ? { bottom: 40, right: 8 } : undefined}
       >
-        <Camera ref={camera} />
+        <Camera
+          ref={camera}
+          centerCoordinate={[lon, lat]}
+          zoomLevel={17}
+          pitch={64}
+          heading={-161.81}
+          animationDuration={0}
+           />
         <Images images={{ 'headingArrow': require('../assets/images/headingArrow.png') }} />
         <LocationPuck
           bearingImage="headingArrow"
@@ -64,11 +76,11 @@ const Map = () => {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          console.log("button pressed", location?.coords.latitude, location?.coords.longitude);
+          console.log("userLocation-button pressed | Coords:", location?.coords.latitude, location?.coords.longitude);
           camera.current?.setCamera({
-            centerCoordinate: [location.coords.longitude, location.coords.latitude],
-            zoomLevel: 16,  
-            pitch: 70,
+            centerCoordinate: [lon, lat],
+            zoomLevel: 17,
+            pitch: 64,
             heading: -161.81,
             animationDuration: 1000,
           });
@@ -80,6 +92,7 @@ const Map = () => {
   );
 };
 
+// Styling
 const styles = StyleSheet.create({
   map: {
     flex: 1,
@@ -87,10 +100,10 @@ const styles = StyleSheet.create({
   },
   button: {
     position: 'absolute',
-    bottom: 100,
-    right: 30,
+    bottom: 96,
+    right: 32,
     padding: 32,
-    backgroundColor: 'white',
+    backgroundColor: 'blue',
     borderRadius: 32,
   },
 });
