@@ -2,8 +2,7 @@ import {
   Camera,
   MapView,
   LocationPuck,
-  Images,
-  UserTrackingMode,
+  Images
 } from '@rnmapbox/maps';
 
 import {
@@ -27,7 +26,7 @@ const Map = () => {
 
   console.log("fetch", lat, lon);
 
-  // mutable ref to the Camera component to allow programmatic control
+  // mutable ref to the Camera component to control the map's camera
   const camera = useRef<Camera>(null);
 
   useEffect(() => {
