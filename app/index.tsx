@@ -11,55 +11,60 @@ import {
   TouchableOpacity,
 } from 'react-native';
 
+import { 
+  useEffect, 
+  useRef
+} from 'react';
+
+import { SafeAreaView } from 'react-native-safe-area-context';
+
 import useUserCurrentLocation from './hooks/userCurrentLocation';
 import Loading from './loading';
-import { useEffect, useRef, useState } from 'react';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Map = () => {
   // Get user's current location
-  const { location } = useUserCurrentLocation();
+  const { userLocation } = useUserCurrentLocation();
 
   // Set initial location
-  const lon = location?.coords.longitude ?? 0;
-  const lat = location?.coords.latitude ?? 0;
+  const userLongitude = userLocation?.coords.longitude ?? 0;
+  const userLatitude = userLocation?.coords.latitude ?? 0;
 
   // Make sure location has been fetched
-  const locationFetched = lon !== 0 && lat !== 0;
+  const userLocationFetched = userLongitude !== 0 && userLatitude !== 0;
 
-  console.log("Fetched location:", lat, lon)
-  console.log("locationfetched:", locationFetched)
+  console.log("Fetched user location:", userLatitude, userLongitude)
+  console.log("User's location fetched:", userLocationFetched)
 
   // Mutable ref to the Camera component to control the map's camera
   const camera = useRef<Camera>(null);
 
+  // Handling for when user's location changes
   useEffect(() => {
     camera.current?.setCamera({ 
-      centerCoordinate: [lon, lat],
+      centerCoordinate: [userLongitude, userLatitude],
       zoomLevel: 17,
       pitch: 64,
       heading: -161.81,
       animationDuration: 1000,
     });
-  }, [lon, lat]);
+  }, [userLongitude, userLatitude]);
 
-  // Render the map centered on user's location
   // Display a loading screen until location is available
+  // Render the map centered on user's location
   // Show user's location with heading arrow
-  return locationFetched ? (
+  return userLocationFetched ? (
     <SafeAreaView style={{ flex: 1 }}>
       <MapView
         styleURL={"mapbox://styles/mapbox/standard"}
         style={styles.map}
         projection='globe'
-        scaleBarEnabled={true}
-        scaleBarPosition={{ top: 8, left: 100 }}
+        scaleBarEnabled={false}
         logoPosition={Platform.OS === 'android' ? { bottom: 40, left: 8 } : undefined}
         attributionPosition={Platform.OS === 'android' ? { bottom: 40, right: 8 } : undefined}
       >
         <Camera
           ref={camera}
-          centerCoordinate={[lon, lat]}
+          centerCoordinate={[userLongitude, userLatitude]}
           zoomLevel={17}
           pitch={64}
           heading={-161.81}
@@ -76,9 +81,9 @@ const Map = () => {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          console.log("userLocation-button pressed | Coords:", location?.coords.latitude, location?.coords.longitude);
+          console.log("Locate user button pressed | Coords:", userLongitude, userLatitude);
           camera.current?.setCamera({
-            centerCoordinate: [lon, lat],
+            centerCoordinate: [userLongitude, userLatitude],
             zoomLevel: 17,
             pitch: 64,
             heading: -161.81,
