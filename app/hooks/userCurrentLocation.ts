@@ -4,7 +4,7 @@ import * as Device from 'expo-device';
 import * as Location from 'expo-location';
 
 export default function useUserCurrentLocation() {
-  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [userLocation, setUserLocation] = useState<Location.LocationObject | null>(null);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
@@ -21,11 +21,11 @@ export default function useUserCurrentLocation() {
       }
 
       let loc = await Location.getCurrentPositionAsync({});
-      setLocation(loc);
+      setUserLocation(loc);
     }
 
     getCurrentLocation();
   }, []);
 
-  return { location, errorMsg };
+  return { userLocation, errorMsg };
 }
