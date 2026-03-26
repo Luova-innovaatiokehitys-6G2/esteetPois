@@ -14,17 +14,25 @@ const ParkingSpots = ({ spots }: Props) => {
   };
 
   return (
-    <MapboxGL.ShapeSource id="parkingSource" shape={geojson}>
-      <MapboxGL.CircleLayer
-        id="parkingLayer"
-        style={{
-          circleRadius: 6,
-          circleColor: "#2ecc71",
-          circleStrokeWidth: 2,
-          circleStrokeColor: "#ffffff",
+    <>
+      {/* Register the icon */}
+      <MapboxGL.Images
+        images={{
+          wheelchair: require("../assets/images/wheelchair.png"),
         }}
       />
-    </MapboxGL.ShapeSource>
+
+      <MapboxGL.ShapeSource id="parkingSource" shape={geojson}>
+        <MapboxGL.SymbolLayer
+          id="parkingSymbols"
+          style={{
+            iconImage: "wheelchair",
+            iconSize: 0.8,
+            iconAllowOverlap: true,
+          }}
+        />
+      </MapboxGL.ShapeSource>
+    </>
   );
 };
 

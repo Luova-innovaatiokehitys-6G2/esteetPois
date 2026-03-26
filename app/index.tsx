@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Camera,
   MapView,
@@ -26,26 +26,42 @@ const Map = () => {
 
   const [spots, setSpots] = useState<Feature<Point>[]>([]);
 
-  const handleMapPress = (e: any) => {
-    const coords = e.geometry.coordinates;
+  useEffect(() => {
+    if (!location) return;
 
-    const newSpot: Feature<Point> = {
-      type: "Feature",
-      geometry: {
-        type: "Point",
-        coordinates: coords,
-      },
-      properties: {
-        id: Date.now().toString(),
-      },
-    };
+    const { latitude, longitude } = location.coords;
 
-    setSpots((prev) => [...prev, newSpot]);
-  };
+    const randomSpots: Feature<Point>[] = [];
+
+    const numberOfSpots = Math.floor(Math.random() * 10) + 5;
+
+    for (let i = 0; i < numberOfSpots; i++) {
+      const latOffset = (Math.random() - 0.5) * 0.002;
+      const lngOffset = (Math.random() - 0.5) * 0.002;
+
+      const newSpot: Feature<Point> = {
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [
+            longitude + lngOffset,
+            latitude + latOffset,
+          ],
+        },
+        properties: {
+          id: `${Date.now()}-${i}`,
+        },
+      };
+
+      randomSpots.push(newSpot);
+    }
+
+    setSpots(randomSpots);
+
+  }, [location]);
 
   const clearParkingSpots = () => {
     setSpots([]);
-    console.log("All parking spots removed");
   };
 
   return location ? (
@@ -55,7 +71,6 @@ const Map = () => {
         style={styles.map}
         projection="globe"
         scaleBarEnabled={false}
-        onLongPress={handleMapPress}
         logoPosition={Platform.OS === "android" ? { bottom: 40, left: 10 } : undefined}
         attributionPosition={Platform.OS === "android" ? { bottom: 40, right: 10 } : undefined}
       >
@@ -95,11 +110,7 @@ const Map = () => {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          console.log(
-            "button pressed",
-            location?.coords.latitude,
-            location?.coords.longitude
-          );
+          console.log("User location:", location.coords);
         }}
       />
 
@@ -121,7 +132,6 @@ const styles = StyleSheet.create({
     flex: 1,
     width: "100%",
   },
-
   button: {
     position: "absolute",
     bottom: 100,
@@ -130,7 +140,6 @@ const styles = StyleSheet.create({
     backgroundColor: "white",
     borderRadius: 32,
   },
-
   clearButton: {
     position: "absolute",
     top: 60,
@@ -140,7 +149,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#ff4d4d",
     borderRadius: 16,
   },
-
   buttonText: {
     color: "white",
     fontWeight: "bold",
