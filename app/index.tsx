@@ -81,7 +81,7 @@ const Map = () => {
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-          console.log("Locate user button pressed | Coords:", userLongitude, userLatitude);
+          console.log("Locate user button pressed | Coords:", userLatitude, userLongitude);
           camera.current?.setCamera({
             centerCoordinate: [userLongitude, userLatitude],
             zoomLevel: 17,
