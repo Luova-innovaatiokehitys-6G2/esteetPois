@@ -3,16 +3,17 @@ import {
   Camera,
   MapView,
   LocationPuck,
-  Images
+  Images,
 } from "@rnmapbox/maps";
 
 import {
   Platform,
   StyleSheet,
   TouchableOpacity,
-  View
 } from "react-native";
 
+
+import { MapboxNavigationView } from "@badatgil/expo-mapbox-navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feature, Point } from "geojson";
 
@@ -23,16 +24,33 @@ import Loading from "./loading";
 const Map = () => {
 
   const { userLocation } = useUserCurrentLocation();
+  const [navigationMapView, setnavigationMapView] = useState(false);
 
-  const userLongitude = userLocation?.coords.longitude ?? 0;
-  const userLatitude = userLocation?.coords.latitude ?? 0;
+  const userLatitude: number = userLocation?.coords.latitude ?? 0;
+  const userLongitude: number = userLocation?.coords.longitude ?? 0;
 
-  const userLocationFetched = userLongitude !== 0 && userLatitude !== 0;
+  const destinationLatitude: number = 65.06044806088848
+  const destinationLongitude: number = 25.462700022779803
+
+  const userLocationFetched: boolean = userLongitude !== 0 && userLatitude !== 0;
 
   const camera = useRef<Camera>(null);
 
+  const handleMapView = () => {
+    setnavigationMapView(prev => !prev);
+  };
+
   const [spots, setSpots] = useState<Feature<Point>[]>([]);
 
+  type userCoordinate = {
+    latitude: number;
+    longitude: number;
+  };
+
+  const userCoordinates: userCoordinate[] = [
+    { latitude: userLatitude, longitude: userLongitude },
+    { latitude: destinationLatitude, longitude: destinationLongitude },
+  ];
 
   useEffect(() => {
     if (!userLocationFetched) return;
@@ -83,7 +101,53 @@ const Map = () => {
     setSpots([]);
   };
 
-  return userLocationFetched ? (
+  console.log("userCoordinates", userCoordinates)
+
+  const styles = StyleSheet.create({
+    map: {
+      flex: 1,
+      width: "100%",
+    },
+    button: {
+      position: "absolute",
+      bottom: 96,
+      right: 32,
+      padding: 32,
+      backgroundColor: "blue",
+      borderRadius: 32,
+    },
+    clearButton: {
+      position: "absolute",
+      top: 60,
+      left: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      backgroundColor: "#ff4d4d",
+      borderRadius: 16,
+    },
+    swapMapViewButton: {
+      position: "absolute",
+      top: 100,
+      left: 20,
+      paddingVertical: 10,
+      paddingHorizontal: 14,
+      backgroundColor: "#4dff9d",
+      borderRadius: 16,
+    }
+  });
+
+  if (!userLocationFetched) return <Loading />;
+  if (navigationMapView) return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <MapboxNavigationView
+        style={{ flex: 1 }}
+        coordinates={userCoordinates}
+        mapStyle="mapbox://styles/mapbox/streets-v12"
+      />
+    </SafeAreaView>
+  );
+
+  return (
     <SafeAreaView style={{ flex: 1 }}>
       <MapView
         styleURL={"mapbox://styles/mapbox/standard"}
@@ -101,31 +165,23 @@ const Map = () => {
           heading={-161.81}
           animationDuration={0}
         />
-
         <Images
           images={{
             headingArrow: require("../assets/images/headingArrow.png"),
           }}
         />
-
         <LocationPuck
           bearingImage="headingArrow"
           puckBearing="heading"
           puckBearingEnabled={true}
           visible={true}
         />
-
         <ParkingSpots spots={spots} />
-
       </MapView>
 
       <TouchableOpacity
         style={styles.button}
         onPress={() => {
-<<<<<<< HEAD
-          console.log("Locate user button pressed | Coords:", userLatitude, userLongitude);
-=======
->>>>>>> a9f622d50308992a23b3be2a892d3d20d54b06f9
           camera.current?.setCamera({
             centerCoordinate: [userLongitude, userLatitude],
             zoomLevel: 17,
@@ -137,38 +193,16 @@ const Map = () => {
       />
 
       <TouchableOpacity
+        style={styles.swapMapViewButton}
+        onPress={handleMapView}
+      />
+
+      <TouchableOpacity
         style={styles.clearButton}
         onPress={clearParkingSpots}
       />
-
     </SafeAreaView>
-  ) : (
-    <Loading />
   );
-};
-
-const styles = StyleSheet.create({
-  map: {
-    flex: 1,
-    width: "100%",
-  },
-  button: {
-    position: "absolute",
-    bottom: 96,
-    right: 32,
-    padding: 32,
-    backgroundColor: "blue",
-    borderRadius: 32,
-  },
-  clearButton: {
-    position: "absolute",
-    top: 60,
-    left: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    backgroundColor: "#ff4d4d",
-    borderRadius: 16,
-  },
-});
+}
 
 export default Map;

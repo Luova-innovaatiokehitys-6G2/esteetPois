@@ -36,6 +36,16 @@
         }
       ],
       [
+        "@badatgil/expo-mapbox-navigation",
+        {
+          "accessToken": "",
+          "mapboxMapsVersion": "<MAPBOX_MAPS_VERSION>",
+          "androidColorOverrides": {
+            "mapbox_main_maneuver_background_color": "#FF0000"
+          }
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
@@ -44,6 +54,14 @@
           "backgroundColor": "#ffffff",
           "dark": {
             "backgroundColor": "#000000"
+          }
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
           }
         }
       ]
