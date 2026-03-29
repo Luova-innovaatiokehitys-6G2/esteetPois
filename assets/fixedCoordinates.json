@@ -1,0 +1,18 @@
+{
+    "coordinates": [
+        {
+            "id": 0,
+            "name": "OAMK",
+            "city": "Oulu",
+            "latitude": 65.06044806088848,
+            "longitude": 25.462700022779803
+        },
+        {
+            "id": 1,
+            "name": "IP",
+            "city": "Oulu",
+            "latitude": 65.07596704288282,
+            "longitude": 25.447183092362273
+        }
+    ]
+}

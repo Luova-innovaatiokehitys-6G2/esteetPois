@@ -3,6 +3,8 @@ import {
     Platform,
     StyleSheet,
     TouchableOpacity,
+    View,
+    Text
 } from "react-native";
 
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -12,19 +14,20 @@ import {
     MapView,
     LocationPuck,
     Images,
-
+    MarkerView
 } from "@rnmapbox/maps";
 
 import { Feature, Point } from "geojson";
 import useUserCurrentLocation from "./hooks/userCurrentLocation"
+import fixedCoordinateList from "./hooks/fetchCoordinates"
 import ParkingSpots from "./ParkingSpots";
+import Loading from "./loading";
 
 // Define the types of props
 interface BaseMapProps {
     navigationMapView: boolean;
     onToggle: () => void;
 }
-
 
 const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
 
@@ -86,7 +89,15 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
         setSpots([]);
     };
 
-    console.log(navigationMapView)
+    const fixedCoordinates = fixedCoordinateList();
+
+    type Coordinate = {
+        city: string;
+        id: number;
+        latitude: number;
+        longitude: number;
+        name: string;
+    };
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -118,6 +129,21 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
                     visible={true}
                 />
                 <ParkingSpots spots={spots} />
+                {fixedCoordinates.map((fixedLocation: Coordinate) => (
+                    <MarkerView
+                        key={fixedLocation.id}
+                        coordinate={[fixedLocation.longitude, fixedLocation.latitude]}
+                        anchor={{ x: 0.5, y: 1 }}
+                    >
+                        <View style={{ width: 54, height: 20, backgroundColor: "violet", borderRadius: 10 }}>
+                            <TouchableOpacity>
+                                <Text style={{ textAlign: "center" }}>
+                                    {fixedLocation.name}
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+                    </MarkerView>
+                ))}
             </MapView>
 
             <TouchableOpacity
@@ -176,6 +202,9 @@ const styles = StyleSheet.create({
         paddingHorizontal: 14,
         backgroundColor: "#4dff9d",
         borderRadius: 16,
+    },
+    text: {
+
     }
 });
 
