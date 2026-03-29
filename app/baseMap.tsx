@@ -3,25 +3,19 @@ import {
     Platform,
     StyleSheet,
     TouchableOpacity,
-    View,
     Text
 } from "react-native";
-
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import {
     Camera,
     MapView,
     LocationPuck,
     Images,
-    MarkerView
 } from "@rnmapbox/maps";
-
 import { Feature, Point } from "geojson";
 import useUserCurrentLocation from "./hooks/userCurrentLocation"
-import fixedCoordinateList from "./hooks/fetchCoordinates"
 import ParkingSpots from "./ParkingSpots";
-import Loading from "./loading";
+import LocationMarkers from "./locationMarkers";
 
 // Define the types of props
 interface BaseMapProps {
@@ -77,26 +71,16 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
 
         camera.current?.setCamera({
             centerCoordinate: [userLongitude, userLatitude],
-            zoomLevel: 17,
-            pitch: 64,
-            heading: -161.81,
-            animationDuration: 1000,
+            zoomLevel: 18,
+            pitch: 54,
+            heading: 0,
+            animationDuration: 300,
         });
 
     }, [userLongitude, userLatitude]);
 
     const clearParkingSpots = () => {
         setSpots([]);
-    };
-
-    const fixedCoordinates = fixedCoordinateList();
-
-    type Coordinate = {
-        city: string;
-        id: number;
-        latitude: number;
-        longitude: number;
-        name: string;
     };
 
     return (
@@ -112,9 +96,9 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
                 <Camera
                     ref={camera}
                     centerCoordinate={[userLongitude, userLatitude]}
-                    zoomLevel={17}
-                    pitch={64}
-                    heading={-161.81}
+                    zoomLevel={18}
+                    pitch={54}
+                    heading={0}
                     animationDuration={0}
                 />
                 <Images
@@ -129,36 +113,23 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
                     visible={true}
                 />
                 <ParkingSpots spots={spots} />
-                {fixedCoordinates.map((fixedLocation: Coordinate) => (
-                    <MarkerView
-                        key={fixedLocation.id}
-                        coordinate={[fixedLocation.longitude, fixedLocation.latitude]}
-                        anchor={{ x: 0.5, y: 1 }}
-                    >
-                        <View style={{ width: 54, height: 20, backgroundColor: "violet", borderRadius: 10 }}>
-                            <TouchableOpacity>
-                                <Text style={{ textAlign: "center" }}>
-                                    {fixedLocation.name}
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
-                    </MarkerView>
-                ))}
+                <LocationMarkers />
             </MapView>
-
             <TouchableOpacity
-                style={styles.button}
+                style={styles.pinButton}
                 onPress={() => {
                     camera.current?.setCamera({
                         centerCoordinate: [userLongitude, userLatitude],
-                        zoomLevel: 17,
-                        pitch: 64,
-                        heading: -161.81,
-                        animationDuration: 1000,
+                        zoomLevel: 18,
+                        pitch: 54,
+                        heading: 0,
+                        animationDuration: 500,
+                        animationMode: "flyTo"
                     });
                 }}
-            />
-
+            > 
+            <Text style={styles.pinText}>↓</Text>
+            </TouchableOpacity>
             <TouchableOpacity
                 style={styles.clearButton}
                 onPress={clearParkingSpots}
@@ -177,13 +148,19 @@ const styles = StyleSheet.create({
         flex: 1,
         width: "100%",
     },
-    button: {
+    pinButton: {
         position: "absolute",
         bottom: 96,
         right: 32,
-        padding: 32,
-        backgroundColor: "blue",
-        borderRadius: 32,
+        padding: 24,
+        backgroundColor: "#F5A623",
+        borderRadius: 80,
+        borderWidth: 4,
+        borderColor: "#FFFFFF"
+    },
+    pinText: {
+        color: "#1C3557",
+        fontSize: 32
     },
     clearButton: {
         position: "absolute",
@@ -203,9 +180,6 @@ const styles = StyleSheet.create({
         backgroundColor: "#4dff9d",
         borderRadius: 16,
     },
-    text: {
-
-    }
 });
 
 export default BaseMap;

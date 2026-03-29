@@ -1,6 +1,5 @@
 import { MapboxNavigationView } from "@badatgil/expo-mapbox-navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
-
 import useUserCurrentLocation from "./hooks/userCurrentLocation";
 
 const NavigationMap = () => {
