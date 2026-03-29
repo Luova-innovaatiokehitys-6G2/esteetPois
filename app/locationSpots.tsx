@@ -22,9 +22,6 @@ const styles = StyleSheet.create({
         backgroundColor: "#00B386",
         borderRadius: 8
     },
-    press: {
-
-    },
     text: {
         color: "#FFFFFF",
         textAlign: "center"
