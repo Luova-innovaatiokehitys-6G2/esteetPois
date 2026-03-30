@@ -6,10 +6,10 @@ import {
 } from "react-native";
 
 interface NavigateButtonProps {
-    onToggleNavigationButton: () => void;
+    startNavigation: () => void;
 }
 
-const NavigateButton = ({onToggleNavigationButton}: NavigateButtonProps) => {
+const NavigateButton = ({startNavigation}: NavigateButtonProps) => {
 
     const styles = StyleSheet.create({
         container: {
@@ -39,7 +39,7 @@ const NavigateButton = ({onToggleNavigationButton}: NavigateButtonProps) => {
         <View style={styles.container}>
             <TouchableOpacity
                 style={styles.navigationButton}
-                onPress={onToggleNavigationButton}
+                onPress={startNavigation}
             >
                 <Text style={styles.text}>---{'>'}</Text>
             </TouchableOpacity>

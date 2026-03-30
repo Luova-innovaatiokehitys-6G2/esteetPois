@@ -17,21 +17,18 @@ import useUserCurrentLocation from "./hooks/userCurrentLocation"
 import ParkingSpots from "./ParkingSpots";
 import LocationMarkers from "./locationSpots";
 import NavigateButton from "./navigateButton";
+import NavigationMap from "./navigationMap";
 
-// Define the types of props
-interface BaseMapProps {
-    navigationMapView: boolean;
-    onToggle: () => void;
-}
-
-const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
+const BaseMap = () => {
 
     const [spots, setSpots] = useState<Feature<Point>[]>([]);
     const [showNavigationButton, setShowNavigationButton] = useState(false)
+    const [destinationLatitude, setDestinationLatitude] = useState(0);
+    const [destinationLongitude, setDestinationLongitude] = useState(0);
+    const [navigationMapView, setNavigationMapView] = useState(false);
     const { userLocation } = useUserCurrentLocation();
     const userLatitude: number = userLocation?.coords.latitude ?? 0;
     const userLongitude: number = userLocation?.coords.longitude ?? 0;
-
     const camera = useRef<Camera>(null);
     const userLocationFetched: boolean = userLongitude !== 0 && userLatitude !== 0;
 
@@ -84,7 +81,18 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
         setSpots([]);
     };
 
-    console.log(showNavigationButton)
+    const toggleNavigation = (latitude: number, longitude: number) => {
+        setDestinationLatitude(latitude);
+        setDestinationLongitude(longitude);
+        setShowNavigationButton(prev => !prev);
+    }
+
+    const startNavigation = () => {
+        setShowNavigationButton(false);
+        setNavigationMapView(true);
+    }
+
+    if (navigationMapView && userLocationFetched && destinationLatitude !== 0 && destinationLongitude !== 0) return <NavigationMap onToggleNavigation={() => setNavigationMapView(false)} destinationLatitude={destinationLatitude} destinationLongitude={destinationLongitude} />;
 
     return (
         <SafeAreaView style={{ flex: 1 }}>
@@ -116,7 +124,7 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
                     visible={true}
                 />
                 <ParkingSpots spots={spots} />
-                <LocationMarkers toggleNavigation={() => setShowNavigationButton(prev => !prev)}/>
+                <LocationMarkers toggleNavigation={toggleNavigation} />
             </MapView>
             <TouchableOpacity
                 style={styles.pinButton}
@@ -138,11 +146,7 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
                 onPress={clearParkingSpots}
             />
 
-            <TouchableOpacity
-                style={styles.swapMapViewButton}
-                onPress={onToggle}
-            />
-            {showNavigationButton && <NavigateButton onToggleNavigationButton={() => setShowNavigationButton(prev => !prev)}/>}
+            {showNavigationButton && <NavigateButton startNavigation={startNavigation} />}
         </SafeAreaView>
     );
 }

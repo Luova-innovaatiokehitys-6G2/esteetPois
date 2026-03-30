@@ -4,15 +4,15 @@ import useUserCurrentLocation from "./hooks/userCurrentLocation";
 
 interface NavigationMapProps{
     onToggleNavigation: () => void;
+    destinationLatitude: number;
+    destinationLongitude: number;
 }
 
-const NavigationMap = ({ onToggleNavigation }: NavigationMapProps) => {
+const NavigationMap = ({ onToggleNavigation, destinationLatitude, destinationLongitude }: NavigationMapProps) => {
 
     const { userLocation } = useUserCurrentLocation();
     const userLatitude: number = userLocation?.coords.latitude ?? 0;
     const userLongitude: number = userLocation?.coords.longitude ?? 0;
-    const destinationLatitude: number = 65.06044806088848
-    const destinationLongitude: number = 25.462700022779803
 
     type userCoordinate = {
         latitude: number;
@@ -24,7 +24,6 @@ const NavigationMap = ({ onToggleNavigation }: NavigationMapProps) => {
         { latitude: destinationLatitude, longitude: destinationLongitude },
     ];
 
-    console.log("navigationCoordinates", userCoordinates)
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <MapboxNavigationView
