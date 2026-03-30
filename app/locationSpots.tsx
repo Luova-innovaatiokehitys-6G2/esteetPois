@@ -28,7 +28,11 @@ const styles = StyleSheet.create({
     }
 });
 
-const LocationMarkers = () => {
+interface LocationMarkerProps {
+    toggleNavigation: () => void;
+}
+
+const LocationMarkers = ({toggleNavigation}: LocationMarkerProps) => {
     const fixedCoordinates = fixedCoordinateList();
     return (
         <>
@@ -40,7 +44,9 @@ const LocationMarkers = () => {
                         anchor={{ x: 0.5, y: 1 }}
                     >
                         <View style={styles.container}>
-                            <TouchableOpacity>
+                            <TouchableOpacity
+                                onPress={toggleNavigation}
+                            >
                                 <Text style={styles.text}>
                                     {fixedLocation.name}
                                 </Text>

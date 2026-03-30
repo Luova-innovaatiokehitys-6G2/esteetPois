@@ -15,7 +15,8 @@ import {
 import { Feature, Point } from "geojson";
 import useUserCurrentLocation from "./hooks/userCurrentLocation"
 import ParkingSpots from "./ParkingSpots";
-import LocationMarkers from "./locationMarkers";
+import LocationMarkers from "./locationSpots";
+import NavigateButton from "./navigateButton";
 
 // Define the types of props
 interface BaseMapProps {
@@ -26,7 +27,7 @@ interface BaseMapProps {
 const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
 
     const [spots, setSpots] = useState<Feature<Point>[]>([]);
-
+    const [showNavigationButton, setShowNavigationButton] = useState(false)
     const { userLocation } = useUserCurrentLocation();
     const userLatitude: number = userLocation?.coords.latitude ?? 0;
     const userLongitude: number = userLocation?.coords.longitude ?? 0;
@@ -83,6 +84,8 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
         setSpots([]);
     };
 
+    console.log(showNavigationButton)
+
     return (
         <SafeAreaView style={{ flex: 1 }}>
             <MapView
@@ -113,7 +116,7 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
                     visible={true}
                 />
                 <ParkingSpots spots={spots} />
-                <LocationMarkers />
+                <LocationMarkers toggleNavigation={() => setShowNavigationButton(prev => !prev)}/>
             </MapView>
             <TouchableOpacity
                 style={styles.pinButton}
@@ -127,8 +130,8 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
                         animationMode: "flyTo"
                     });
                 }}
-            > 
-            <Text style={styles.pinText}>↓</Text>
+            >
+                <Text style={styles.pinText}>↓</Text>
             </TouchableOpacity>
             <TouchableOpacity
                 style={styles.clearButton}
@@ -139,6 +142,7 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
                 style={styles.swapMapViewButton}
                 onPress={onToggle}
             />
+            {showNavigationButton && <NavigateButton />}
         </SafeAreaView>
     );
 }
