@@ -14,7 +14,7 @@ const Map = () => {
   const userLocationFetched: boolean = userLongitude !== 0 && userLatitude !== 0;
 
   if (!userLocationFetched) return <Loading />;
-  if (navigationMapView && userLocationFetched) return <NavigationMap />;
+  if (navigationMapView && userLocationFetched) return <NavigationMap onToggleNavigation={() => setNavigationMapView(prev => !prev)} />;
 
   return <BaseMap navigationMapView={navigationMapView} onToggle={() => setNavigationMapView(prev => !prev)} />;
 }

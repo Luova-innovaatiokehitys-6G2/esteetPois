@@ -5,7 +5,11 @@ import {
     StyleSheet
 } from "react-native";
 
-const NavigateButton = () => {
+interface NavigateButtonProps {
+    onToggleNavigationButton: () => void;
+}
+
+const NavigateButton = ({onToggleNavigationButton}: NavigateButtonProps) => {
 
     const styles = StyleSheet.create({
         container: {
@@ -33,7 +37,10 @@ const NavigateButton = () => {
 
     return (
         <View style={styles.container}>
-            <TouchableOpacity style={styles.navigationButton}>
+            <TouchableOpacity
+                style={styles.navigationButton}
+                onPress={onToggleNavigationButton}
+            >
                 <Text style={styles.text}>---{'>'}</Text>
             </TouchableOpacity>
         </View>

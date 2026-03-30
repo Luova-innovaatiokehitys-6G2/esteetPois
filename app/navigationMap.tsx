@@ -2,7 +2,11 @@ import { MapboxNavigationView } from "@badatgil/expo-mapbox-navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
 import useUserCurrentLocation from "./hooks/userCurrentLocation";
 
-const NavigationMap = () => {
+interface NavigationMapProps{
+    onToggleNavigation: () => void;
+}
+
+const NavigationMap = ({onToggleNavigation}: NavigationMapProps) => {
 
     const { userLocation } = useUserCurrentLocation();
     const userLatitude: number = userLocation?.coords.latitude ?? 0;
@@ -27,6 +31,7 @@ const NavigationMap = () => {
                 style={{ flex: 1 }}
                 coordinates={userCoordinates}
                 mapStyle="mapbox://styles/mapbox/streets-v12"
+                onCancelNavigation={onToggleNavigation}
             />
         </SafeAreaView>
     );

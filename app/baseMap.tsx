@@ -142,7 +142,7 @@ const BaseMap = ({ navigationMapView, onToggle }: BaseMapProps) => {
                 style={styles.swapMapViewButton}
                 onPress={onToggle}
             />
-            {showNavigationButton && <NavigateButton />}
+            {showNavigationButton && <NavigateButton onToggleNavigationButton={() => setShowNavigationButton(prev => !prev)}/>}
         </SafeAreaView>
     );
 }

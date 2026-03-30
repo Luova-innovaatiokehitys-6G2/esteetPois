@@ -39,10 +39,7 @@
         "@badatgil/expo-mapbox-navigation",
         {
           "accessToken": "",
-          "mapboxMapsVersion": "<MAPBOX_MAPS_VERSION>",
-          "androidColorOverrides": {
-            "mapbox_main_maneuver_background_color": "#FF0000"
-          }
+          "mapboxMapsVersion": "<MAPBOX_MAPS_VERSION>"
         }
       ],
       [
