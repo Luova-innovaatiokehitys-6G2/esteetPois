@@ -6,7 +6,7 @@ interface NavigationMapProps{
     onToggleNavigation: () => void;
 }
 
-const NavigationMap = ({onToggleNavigation}: NavigationMapProps) => {
+const NavigationMap = ({ onToggleNavigation }: NavigationMapProps) => {
 
     const { userLocation } = useUserCurrentLocation();
     const userLatitude: number = userLocation?.coords.latitude ?? 0;
