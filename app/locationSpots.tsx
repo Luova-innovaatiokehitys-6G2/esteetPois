@@ -8,11 +8,11 @@ import {
 import { MarkerView } from "@rnmapbox/maps"
 
 type Coordinate = {
-    city: string;
     id: number;
+    name: string;
+    city: string;
     latitude: number;
     longitude: number;
-    name: string;
 };
 
 const styles = StyleSheet.create({
@@ -32,7 +32,7 @@ interface LocationMarkerProps {
     toggleNavigation: (latitude: number, longitude: number) => void;
 }
 
-const LocationMarkers = ({toggleNavigation}: LocationMarkerProps) => {
+const LocationMarkers = ({ toggleNavigation }: LocationMarkerProps) => {
     const fixedCoordinates = fixedCoordinateList();
     return (
         <>
