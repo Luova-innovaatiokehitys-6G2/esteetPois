@@ -18,6 +18,7 @@ import ParkingSpots from "./ParkingSpots";
 import LocationMarkers from "./locationSpots";
 import NavigateButton from "./navigateButton";
 import NavigationMap from "./navigationMap";
+import EntranceLocationMarkers from "./entranceSpots";
 
 const BaseMap = () => {
 
@@ -95,7 +96,7 @@ const BaseMap = () => {
     if (navigationMapView && userLocationFetched && destinationLatitude !== 0 && destinationLongitude !== 0) return <NavigationMap onToggleNavigation={() => setNavigationMapView(false)} destinationLatitude={destinationLatitude} destinationLongitude={destinationLongitude} />;
 
     return (
-        <SafeAreaView style={{ flex: 1 }}>
+        <SafeAreaView style={styles.container}>
             <MapView
                 styleURL={"mapbox://styles/mapbox/standard"}
                 style={styles.map}
@@ -125,6 +126,7 @@ const BaseMap = () => {
                 />
                 <ParkingSpots spots={spots} />
                 <LocationMarkers toggleNavigation={toggleNavigation} />
+                <EntranceLocationMarkers toggleNavigation={toggleNavigation} />
             </MapView>
             <TouchableOpacity
                 style={styles.pinButton}
@@ -152,6 +154,10 @@ const BaseMap = () => {
 }
 
 const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: "#1C3557"
+    },
     map: {
         flex: 1,
         width: "100%",
@@ -177,15 +183,6 @@ const styles = StyleSheet.create({
         paddingVertical: 10,
         paddingHorizontal: 14,
         backgroundColor: "#ff4d4d",
-        borderRadius: 16,
-    },
-    swapMapViewButton: {
-        position: "absolute",
-        top: 100,
-        left: 20,
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        backgroundColor: "#4dff9d",
         borderRadius: 16,
     },
 });

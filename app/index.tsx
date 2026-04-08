@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React from "react";
 import useUserCurrentLocation from "./hooks/userCurrentLocation";
 import Loading from "./loading";
 import BaseMap from "./baseMap"
-import NavigationMap from "./navigationMap";
 
 const Map = () => {
 
