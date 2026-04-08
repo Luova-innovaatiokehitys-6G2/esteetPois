@@ -1,25 +1,18 @@
 {
     "coordinates": [
         {
-            "id": 0,
+            "id": 1,
             "name": "OAMK",
             "city": "Oulu",
             "latitude": 65.06044806088848,
             "longitude": 25.462700022779803
         },
         {
-            "id": 1,
+            "id": 0,
             "name": "IP",
             "city": "Oulu",
             "latitude": 65.07596704288282,
             "longitude": 25.447183092362273
-        },
-        {
-            "id": 2,
-            "name": "Paalikatu",
-            "city": "Oulu",
-            "latitude": 65.045721,
-            "longitude": 25.437306
         }
     ]
 }

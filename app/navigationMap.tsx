@@ -1,7 +1,7 @@
 import { MapboxNavigationView } from "@badatgil/expo-mapbox-navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
 import useUserCurrentLocation from "./hooks/userCurrentLocation";
-import { StyleSheet, TouchableOpacity } from "react-native";
+import { StyleSheet, TouchableOpacity, Text } from "react-native";
 import { useState } from "react";
 import NavigationMapPedestrian from "./navigationMapPedestrian";
 
@@ -61,7 +61,12 @@ const NavigationMap = ({ onToggleNavigation, destinationLatitude, destinationLon
             />
             <TouchableOpacity
                 style={styles.arrivedButton}
-                onPress={userArrivedParkingLot} />
+                onPress={userArrivedParkingLot}
+            >
+                <Text style= {styles.arrivedButtonText}>
+                    🚶‍♂️
+                </Text>
+            </TouchableOpacity>
         </SafeAreaView>
     );
 
@@ -74,13 +79,16 @@ const styles = StyleSheet.create({
     },
     arrivedButton: {
         position: "absolute",
-        bottom: 96,
+        bottom: 120,
         right: 32,
         padding: 24,
         backgroundColor: "#F5A623",
         borderRadius: 80,
         borderWidth: 4,
         borderColor: "#FFFFFF"
+    },
+    arrivedButtonText: {
+        fontSize: 32
     }
 });
 
