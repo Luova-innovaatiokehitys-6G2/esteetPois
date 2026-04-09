@@ -27,8 +27,8 @@ const NavigationMapPedestrian = ({
     const [warningMsg, setWarningMsg] = useState<string | null>(null);
     const [showWarning, setShowWarning] = useState(false);
 
-    const hazardLatitude: number = 65.07588506456669;
-    const hazardLongitude: number = 25.445894257616906;
+    const hazardLatitude: number = 65.061125;
+    const hazardLongitude: number = 25.470295;
 
     const entranceCoordinates: EntranceCoordinate[] = fixedEntranceCordinateList();
 
@@ -58,7 +58,7 @@ const NavigationMapPedestrian = ({
             1
         );
 
-        if (distanceToHazard < 100) {
+        if (distanceToHazard < 1000) {
             setWarningMsg("⚠ Icy path ahead — proceed with caution");
             setShowWarning(true);
         } else {
@@ -66,6 +66,9 @@ const NavigationMapPedestrian = ({
             setShowWarning(false);
         }
     }, [startingLatitude, startingLongitude]);
+
+    console.log("starting", startingLatitude, startingLongitude)
+    console.log("hazard", hazardLatitude, hazardLongitude)
 
     const userCoordinates = [
         { latitude: startingLatitude, longitude: startingLongitude },
@@ -87,7 +90,6 @@ const NavigationMapPedestrian = ({
                     mapStyle="mapbox://styles/mapbox/streets-v12"
                     onCancelNavigation={onToggleNavigation}
                     routeProfile="mapbox/walking"
-                    onFinalDestinationArrival={arrivedAtDestination}
                 />
                 <View style={styles.warningContainer}>
                     <TouchableOpacity onPress={dismissWarning}>
