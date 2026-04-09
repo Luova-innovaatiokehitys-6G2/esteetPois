@@ -1,190 +1,180 @@
 import React, { useState, useEffect, useRef } from "react";
 import {
-    Platform,
-    StyleSheet,
-    TouchableOpacity,
-    Text
+  Platform,
+  StyleSheet,
+  TouchableOpacity,
+  Text
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
-    Camera,
-    MapView,
-    LocationPuck,
-    Images,
+  Camera,
+  MapView,
+  LocationPuck,
+  Images,
 } from "@rnmapbox/maps";
 import { Feature, Point } from "geojson";
-import useUserCurrentLocation from "./hooks/userCurrentLocation"
+import useUserCurrentLocation from "./hooks/userCurrentLocation";
 import ParkingSpots from "./ParkingSpots";
 import LocationMarkers from "./locationSpots";
+import EntranceLocationMarkers from "./entranceSpots";
 import NavigateButton from "./navigateButton";
 import NavigationMap from "./navigationMap";
-import EntranceLocationMarkers from "./entranceSpots";
+
+type SpotProperties = {
+  id: string;
+  reserved?: boolean;
+};
 
 const BaseMap = () => {
+  const [spots, setSpots] = useState<Feature<Point, SpotProperties>[]>([]);
+  const [showNavigationButton, setShowNavigationButton] = useState(false);
+  const [destinationLatitude, setDestinationLatitude] = useState(0);
+  const [destinationLongitude, setDestinationLongitude] = useState(0);
+  const [navigationMapView, setNavigationMapView] = useState(false);
 
-    const [spots, setSpots] = useState<Feature<Point>[]>([]);
-    const [showNavigationButton, setShowNavigationButton] = useState(false)
-    const [destinationLatitude, setDestinationLatitude] = useState(0);
-    const [destinationLongitude, setDestinationLongitude] = useState(0);
-    const [navigationMapView, setNavigationMapView] = useState(false);
-    const { userLocation } = useUserCurrentLocation();
-    const userLatitude: number = userLocation?.coords.latitude ?? 0;
-    const userLongitude: number = userLocation?.coords.longitude ?? 0;
-    const camera = useRef<Camera>(null);
-    const userLocationFetched: boolean = userLongitude !== 0 && userLatitude !== 0;
+  const { userLocation } = useUserCurrentLocation();
+  const userLatitude = userLocation?.coords.latitude ?? 0;
+  const userLongitude = userLocation?.coords.longitude ?? 0;
 
-    useEffect(() => {
-        if (!userLocationFetched) return;
+  const camera = useRef<Camera>(null);
 
-        const randomSpots: Feature<Point>[] = [];
+  const userLocationFetched = userLatitude !== 0 && userLongitude !== 0;
 
-        const numberOfSpots = Math.floor(Math.random() * 10) + 5;
+  useEffect(() => {
+    if (!userLocationFetched) return;
 
-        for (let i = 0; i < numberOfSpots; i++) {
-            const latOffset = (Math.random() - 0.5) * 0.002;
-            const lngOffset = (Math.random() - 0.5) * 0.002;
+    const baseSpots: Feature<Point, SpotProperties>[] = [
+      { type: "Feature", geometry: { type: "Point", coordinates: [25.470315, 65.0612] }, properties: { id: "1" } },
+      { type: "Feature", geometry: { type: "Point", coordinates: [25.470585, 65.061214] }, properties: { id: "2" } },
+      { type: "Feature", geometry: { type: "Point", coordinates: [25.470368, 65.060995] }, properties: { id: "3" } },
+      { type: "Feature", geometry: { type: "Point", coordinates: [25.470295, 65.061125] }, properties: { id: "4" } },
+      { type: "Feature", geometry: { type: "Point", coordinates: [25.470287, 65.061086] }, properties: { id: "5" } },
+    ];
 
-            const newSpot: Feature<Point> = {
-                type: "Feature",
-                geometry: {
-                    type: "Point",
-                    coordinates: [
-                        userLongitude + lngOffset,
-                        userLatitude + latOffset,
-                    ],
-                },
-                properties: {
-                    id: `${Date.now()}-${i}`,
-                },
-            };
+    const reservedCount = Math.floor(Math.random() * 2) + 2;
+    const shuffled = [...baseSpots].sort(() => 0.5 - Math.random());
+    const reservedIds = shuffled.slice(0, reservedCount).map(s => s.properties.id);
 
-            randomSpots.push(newSpot);
-        }
+    const spotsWithReservation = baseSpots.map(spot => ({
+      ...spot,
+      properties: {
+        ...spot.properties,
+        reserved: reservedIds.includes(spot.properties.id),
+      },
+    }));
 
-        setSpots(randomSpots);
+    setSpots(spotsWithReservation);
+  }, [userLocationFetched]);
 
-    }, [userLocationFetched]);
+  useEffect(() => {
+    if (!userLocationFetched) return;
 
-    useEffect(() => {
-        if (!userLocationFetched) return;
+    camera.current?.setCamera({
+      centerCoordinate: [userLongitude, userLatitude],
+      zoomLevel: 18,
+      pitch: 54,
+      heading: 0,
+      animationDuration: 300,
+    });
+  }, [userLongitude, userLatitude]);
 
-        camera.current?.setCamera({
+  const clearParkingSpots = () => setSpots([]);
+
+  const handleSelectSpot = (lat: number, lng: number, reserved?: boolean) => {
+    if (reserved) {
+      alert("This spot is reserved!");
+      return;
+    }
+    setDestinationLatitude(lat);
+    setDestinationLongitude(lng);
+    setShowNavigationButton(true);
+  };
+
+  const toggleNavigationFromMarker = (lat: number, lng: number) => {
+    setDestinationLatitude(lat);
+    setDestinationLongitude(lng);
+
+    const freeSpots = spots.filter(s => !s.properties?.reserved);
+    if (freeSpots.length > 0) {
+      const randomSpot = freeSpots[Math.floor(Math.random() * freeSpots.length)];
+      const [spotLng, spotLat] = randomSpot.geometry.coordinates;
+      setDestinationLatitude(spotLat);
+      setDestinationLongitude(spotLng);
+    }
+
+    setShowNavigationButton(true);
+  };
+
+  const startNavigation = () => {
+    setShowNavigationButton(false);
+    setNavigationMapView(true);
+  };
+
+  if (navigationMapView && userLocationFetched && destinationLatitude !== 0 && destinationLongitude !== 0) {
+    return (
+      <NavigationMap
+        onToggleNavigation={() => setNavigationMapView(false)}
+        destinationLatitude={destinationLatitude}
+        destinationLongitude={destinationLongitude}
+      />
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <MapView
+        styleURL={"mapbox://styles/mapbox/standard"}
+        style={styles.map}
+        projection="globe"
+        scaleBarEnabled={false}
+        logoPosition={Platform.OS === "android" ? { bottom: 40, left: 8 } : undefined}
+        attributionPosition={Platform.OS === "android" ? { bottom: 40, right: 8 } : undefined}
+      >
+        <Camera ref={camera} />
+        <Images images={{ headingArrow: require("../assets/images/headingArrow.png") }} />
+        <LocationPuck bearingImage="headingArrow" puckBearing="heading" puckBearingEnabled visible />
+
+        <ParkingSpots spots={spots} onSelectSpot={handleSelectSpot} />
+
+        <LocationMarkers toggleNavigation={toggleNavigationFromMarker} />
+        <EntranceLocationMarkers toggleNavigation={toggleNavigationFromMarker} />
+      </MapView>
+
+      <TouchableOpacity
+        style={styles.pinButton}
+        onPress={() => {
+          camera.current?.setCamera({
             centerCoordinate: [userLongitude, userLatitude],
             zoomLevel: 18,
             pitch: 54,
             heading: 0,
-            animationDuration: 300,
-        });
+            animationDuration: 500,
+            animationMode: "flyTo",
+          });
+        }}
+      >
+        <Text style={styles.pinText}>↓</Text>
+      </TouchableOpacity>
 
-    }, [userLongitude, userLatitude]);
-
-    const clearParkingSpots = () => {
-        setSpots([]);
-    };
-
-    const toggleNavigation = (latitude: number, longitude: number) => {
-        setDestinationLatitude(latitude);
-        setDestinationLongitude(longitude);
-        setShowNavigationButton(prev => !prev);
-    }
-
-    const startNavigation = () => {
-        setShowNavigationButton(false);
-        setNavigationMapView(true);
-    }
-
-    if (navigationMapView && userLocationFetched && destinationLatitude !== 0 && destinationLongitude !== 0) return <NavigationMap onToggleNavigation={() => setNavigationMapView(false)} destinationLatitude={destinationLatitude} destinationLongitude={destinationLongitude} />;
-
-    return (
-        <SafeAreaView style={styles.container}>
-            <MapView
-                styleURL={"mapbox://styles/mapbox/standard"}
-                style={styles.map}
-                projection="globe"
-                scaleBarEnabled={false}
-                logoPosition={Platform.OS === "android" ? { bottom: 40, left: 8 } : undefined}
-                attributionPosition={Platform.OS === "android" ? { bottom: 40, right: 8 } : undefined}
-            >
-                <Camera
-                    ref={camera}
-                    centerCoordinate={[userLongitude, userLatitude]}
-                    zoomLevel={18}
-                    pitch={54}
-                    heading={0}
-                    animationDuration={0}
-                />
-                <Images
-                    images={{
-                        headingArrow: require("../assets/images/headingArrow.png"),
-                    }}
-                />
-                <LocationPuck
-                    bearingImage="headingArrow"
-                    puckBearing="heading"
-                    puckBearingEnabled={true}
-                    visible={true}
-                />
-                <ParkingSpots spots={spots} />
-                <LocationMarkers toggleNavigation={toggleNavigation} />
-                <EntranceLocationMarkers toggleNavigation={toggleNavigation} />
-            </MapView>
-            <TouchableOpacity
-                style={styles.pinButton}
-                onPress={() => {
-                    camera.current?.setCamera({
-                        centerCoordinate: [userLongitude, userLatitude],
-                        zoomLevel: 18,
-                        pitch: 54,
-                        heading: 0,
-                        animationDuration: 500,
-                        animationMode: "flyTo"
-                    });
-                }}
-            >
-                <Text style={styles.pinText}>↓</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                style={styles.clearButton}
-                onPress={clearParkingSpots}
-            />
-
-            {showNavigationButton && <NavigateButton startNavigation={startNavigation} />}
-        </SafeAreaView>
-    );
-}
+      {showNavigationButton && <NavigateButton startNavigation={startNavigation} />}
+    </SafeAreaView>
+  );
+};
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: "#1C3557"
-    },
-    map: {
-        flex: 1,
-        width: "100%",
-    },
-    pinButton: {
-        position: "absolute",
-        bottom: 96,
-        right: 32,
-        padding: 24,
-        backgroundColor: "#F5A623",
-        borderRadius: 80,
-        borderWidth: 4,
-        borderColor: "#FFFFFF"
-    },
-    pinText: {
-        color: "#1C3557",
-        fontSize: 32
-    },
-    clearButton: {
-        position: "absolute",
-        top: 60,
-        left: 20,
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-        backgroundColor: "#ff4d4d",
-        borderRadius: 16,
-    },
+  container: { flex: 1, backgroundColor: "#1C3557" },
+  map: { flex: 1, width: "100%" },
+  pinButton: {
+    position: "absolute",
+    bottom: 96,
+    right: 32,
+    padding: 24,
+    backgroundColor: "#F5A623",
+    borderRadius: 80,
+    borderWidth: 4,
+    borderColor: "#FFFFFF"
+  },
+  pinText: { color: "#1C3557", fontSize: 32 },
 });
 
 export default BaseMap;
