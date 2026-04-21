@@ -1,4 +1,3 @@
-import { MapboxNavigationView } from "@badatgil/expo-mapbox-navigation";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 import fixedEntranceCordinateList from "./hooks/fetchEntranceCoordinates";
@@ -84,13 +83,6 @@ const NavigationMapPedestrian = ({
     if (showWarning) {
         return (
             <SafeAreaView style={styles.container}>
-                <MapboxNavigationView
-                    style={{ flex: 1 }}
-                    coordinates={userCoordinates}
-                    mapStyle="mapbox://styles/mapbox/streets-v12"
-                    onCancelNavigation={onToggleNavigation}
-                    routeProfile="mapbox/walking"
-                />
                 <View style={styles.warningContainer}>
                     <TouchableOpacity onPress={dismissWarning}>
                         <Text style={styles.text}>{warningMsg}</Text>
@@ -102,14 +94,6 @@ const NavigationMapPedestrian = ({
 
     return (
         <SafeAreaView style={styles.container}>
-            <MapboxNavigationView
-                style={{ flex: 1 }}
-                coordinates={userCoordinates}
-                mapStyle="mapbox://styles/mapbox/streets-v12"
-                onCancelNavigation={onToggleNavigation}
-                routeProfile="mapbox/walking"
-                onFinalDestinationArrival={arrivedAtDestination}
-            />
         </SafeAreaView>
     );
 };

@@ -18,7 +18,7 @@ import ParkingSpots from "./ParkingSpots";
 import LocationMarkers from "./locationSpots";
 import EntranceLocationMarkers from "./entranceSpots";
 import NavigateButton from "./navigateButton";
-import NavigationMap from "./navigationMap";
+import NavigationMapCar from "./navigationMapCar";
 
 type SpotProperties = {
   id: string;
@@ -112,7 +112,7 @@ const BaseMap = () => {
 
   if (navigationMapView && userLocationFetched && destinationLatitude !== 0 && destinationLongitude !== 0) {
     return (
-      <NavigationMap
+      <NavigationMapCar
         onToggleNavigation={() => setNavigationMapView(false)}
         destinationLatitude={destinationLatitude}
         destinationLongitude={destinationLongitude}

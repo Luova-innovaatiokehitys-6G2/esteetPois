@@ -36,13 +36,6 @@
         }
       ],
       [
-        "@badatgil/expo-mapbox-navigation",
-        {
-          "accessToken": "",
-          "mapboxMapsVersion": "<MAPBOX_MAPS_VERSION>"
-        }
-      ],
-      [
         "expo-splash-screen",
         {
           "image": "./assets/images/splash-icon.png",
