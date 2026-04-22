@@ -10,6 +10,7 @@ import {
     LineLayer,
     UserLocation
 } from "@rnmapbox/maps";
+import useRoute from "./hooks/fetchRoute";
 
 interface NavigationMapProps {
     onToggleNavigation: () => void;
@@ -21,7 +22,6 @@ const NavigationMapCar = ({ onToggleNavigation, destinationLatitude, destination
 
     const { userLocation } = useUserCurrentLocation();
     const [arrivedParkingLot, setArrivedParkingLot] = useState(false);
-    const [route, setRoute] = useState(null)
     const userLatitude: number = userLocation?.coords.latitude ?? 0;
     const userLongitude: number = userLocation?.coords.longitude ?? 0;
 
@@ -29,15 +29,10 @@ const NavigationMapCar = ({ onToggleNavigation, destinationLatitude, destination
     let userArrivedParkingLotLatitude: number = destinationLatitude;
     let userArrivedParkingLotLongitude: number = destinationLongitude;
 
-    type userCoordinate = {
-        latitude: number;
-        longitude: number;
-    };
-
-    const userCoordinates: userCoordinate[] = [
+    const carRoute = useRoute(
         { latitude: userLatitude, longitude: userLongitude },
-        { latitude: destinationLatitude, longitude: destinationLongitude },
-    ];
+        { latitude: destinationLatitude, longitude: destinationLongitude }
+    )
 
     const userArrivedParkingLot = () => {
         if ((userArrivedParkingLotLatitude === destinationLatitude && userArrivedParkingLotLongitude === destinationLongitude) || (userLatitude === destinationLatitude && userLongitude === destinationLongitude)) {
@@ -47,6 +42,10 @@ const NavigationMapCar = ({ onToggleNavigation, destinationLatitude, destination
             }
         }
     }
+
+    console.log(carRoute)
+
+
 
     /* Old code for handling the start of pedestrian-navigation
     if (arrivedParkingLot) return <NavigationMapPedestrian
@@ -68,8 +67,19 @@ const NavigationMapCar = ({ onToggleNavigation, destinationLatitude, destination
                 styleURL="mapbox://styles/mapbox/navigation-day-v1"
                 style={styles.map}
             >
-            <UserLocation />
-
+                <Camera followUserLocation followZoomLevel={15} />
+                <UserLocation />
+                {carRoute.route && (
+                    <ShapeSource
+                        id="routeSource"
+                        shape={carRoute.route}
+                    >
+                        <LineLayer
+                            id="routeLine"
+                            style={{ lineColor: "#F5A623", lineWidth: 5 }}
+                        />
+                    </ShapeSource>
+                )}
             </MapView>
             <TouchableOpacity
                 style={styles.arrivedButton}
