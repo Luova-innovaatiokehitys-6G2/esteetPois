@@ -19,6 +19,7 @@ import LocationMarkers from "./locationSpots";
 import EntranceLocationMarkers from "./entranceSpots";
 import NavigateButton from "./navigateButton";
 import NavigationMapCar from "./navigationMapCar";
+import Loading from "./loading";
 
 type SpotProperties = {
   id: string;
@@ -78,7 +79,7 @@ const BaseMap = () => {
     });
   }, [userLongitude, userLatitude]);
 
-  const clearParkingSpots = () => setSpots([]);
+  console.log("userlatitude: ", userLatitude, "userLongitude: ", userLongitude)
 
   const handleSelectSpot = (lat: number, lng: number, reserved?: boolean) => {
     if (reserved) {
@@ -113,52 +114,63 @@ const BaseMap = () => {
   if (navigationMapView && userLocationFetched && destinationLatitude !== 0 && destinationLongitude !== 0) {
     return (
       <NavigationMapCar
-        onToggleNavigation={() => setNavigationMapView(false)}
+        onToggleNavigation={() => setNavigationMapView(prev => !prev)}
+        userLatitude={userLatitude}
+        userLongitude={userLongitude}
         destinationLatitude={destinationLatitude}
         destinationLongitude={destinationLongitude}
       />
     );
+  } else if (!navigationMapView && userLocationFetched) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <MapView
+          styleURL={"mapbox://styles/mapbox/standard"}
+          style={styles.map}
+          projection="globe"
+          scaleBarEnabled={false}
+          logoPosition={Platform.OS === "android" ? { bottom: 40, left: 8 } : undefined}
+          attributionPosition={Platform.OS === "android" ? { bottom: 40, right: 8 } : undefined}
+
+        >
+          <Camera
+            ref={camera}
+            centerCoordinate={[userLongitude, userLatitude]}
+            zoomLevel={18}
+            pitch={54}
+            heading={0}
+            animationDuration={500}
+            animationMode="flyTo"
+          />
+          <Images images={{ headingArrow: require("../assets/images/headingArrow.png") }} />
+          <LocationPuck bearingImage="headingArrow" puckBearing="heading" puckBearingEnabled visible />
+          <ParkingSpots spots={spots} onSelectSpot={handleSelectSpot} />
+          <LocationMarkers toggleNavigation={toggleNavigationFromMarker} />
+          <EntranceLocationMarkers toggleNavigation={toggleNavigationFromMarker} />
+        </MapView>
+        <TouchableOpacity
+          style={styles.pinButton}
+          onPress={() => {
+            camera.current?.setCamera({
+              centerCoordinate: [userLongitude, userLatitude],
+              zoomLevel: 18,
+              pitch: 54,
+              heading: 0,
+              animationDuration: 500,
+              animationMode: "flyTo",
+            });
+          }}
+        >
+          <Text style={styles.pinText}>↓</Text>
+        </TouchableOpacity>
+        {showNavigationButton && <NavigateButton startNavigation={startNavigation} />}
+      </SafeAreaView>
+    );
+  } else {
+    return <Loading />
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <MapView
-        styleURL={"mapbox://styles/mapbox/standard"}
-        style={styles.map}
-        projection="globe"
-        scaleBarEnabled={false}
-        logoPosition={Platform.OS === "android" ? { bottom: 40, left: 8 } : undefined}
-        attributionPosition={Platform.OS === "android" ? { bottom: 40, right: 8 } : undefined}
-      >
-        <Camera ref={camera} />
-        <Images images={{ headingArrow: require("../assets/images/headingArrow.png") }} />
-        <LocationPuck bearingImage="headingArrow" puckBearing="heading" puckBearingEnabled visible />
 
-        <ParkingSpots spots={spots} onSelectSpot={handleSelectSpot} />
-
-        <LocationMarkers toggleNavigation={toggleNavigationFromMarker} />
-        <EntranceLocationMarkers toggleNavigation={toggleNavigationFromMarker} />
-      </MapView>
-
-      <TouchableOpacity
-        style={styles.pinButton}
-        onPress={() => {
-          camera.current?.setCamera({
-            centerCoordinate: [userLongitude, userLatitude],
-            zoomLevel: 18,
-            pitch: 54,
-            heading: 0,
-            animationDuration: 500,
-            animationMode: "flyTo",
-          });
-        }}
-      >
-        <Text style={styles.pinText}>↓</Text>
-      </TouchableOpacity>
-
-      {showNavigationButton && <NavigateButton startNavigation={startNavigation} />}
-    </SafeAreaView>
-  );
 };
 
 const styles = StyleSheet.create({
@@ -166,7 +178,7 @@ const styles = StyleSheet.create({
   map: { flex: 1, width: "100%" },
   pinButton: {
     position: "absolute",
-    bottom: 96,
+    bottom: 120,
     right: 32,
     padding: 24,
     backgroundColor: "#F5A623",

@@ -1,8 +1,6 @@
 // This component fetches the route to be used for when starting navigation to destination from user's location
 
 import { useEffect, useState } from "react";
-import Loading from "../loading";
-import Mapbox from "@rnmapbox/maps";
 
 const MAPBOX_TOKEN = process.env.EXPO_PUBLIC_API_KEY
 
