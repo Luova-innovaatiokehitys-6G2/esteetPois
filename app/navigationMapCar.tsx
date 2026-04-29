@@ -1,5 +1,5 @@
 import { SafeAreaView } from "react-native-safe-area-context";
-import { StyleSheet, TouchableOpacity, Text, Platform } from "react-native";
+import { StyleSheet, TouchableOpacity, Text, Platform, View } from "react-native";
 import { useState } from "react";
 import NavigationMapPedestrian from "./navigationMapPedestrian";
 import {
@@ -62,6 +62,12 @@ const NavigationMapCar = ({ onToggleNavigation, userLatitude, userLongitude, des
 
     return (
         <SafeAreaView style={styles.container}>
+            <View style={styles.directionsContainer}>
+                <View style={styles.directionsTextContainer}>
+                    <Text style={styles.exitButtonText}>➡</Text>
+                    <Text style={styles.directionsText}>lorem ipsum</Text>
+                </View>
+            </View>
             <MapView
                 styleURL="mapbox://styles/mapbox/navigation-day-v1"
                 style={styles.map}
@@ -78,7 +84,7 @@ const NavigationMapCar = ({ onToggleNavigation, userLatitude, userLongitude, des
                     >
                         <LineLayer
                             id="routeLine"
-                            style={{ lineColor: "#F5A623", lineWidth: 5 }}
+                            style={{ lineColor: "#F5A623", lineWidth: 8 }}
                         />
                     </ShapeSource>
                 )}
@@ -100,6 +106,30 @@ const styles = StyleSheet.create({
     container: {
         flex: 5,
         backgroundColor: "#1C3557"
+    },
+    directionsContainer: {
+        flex: 0.15,
+        backgroundColor: "#1C3557",
+        justifyContent: "center",
+    },
+    directionsTextContainer: {
+        flexDirection: 'row',
+        justifyContent: "flex-start",
+        backgroundColor: "#2E5F8C",
+        marginLeft: 24,
+        marginRight: 24,
+        padding: 24,
+        borderRadius: 80,
+
+    },
+    directionsIcon: {
+        fontSize: 16,
+        color: "#FFFFFF",
+    },
+    directionsText: {
+        fontSize: 16,
+        marginLeft: 8,
+        color: "#FFFFFF",
     },
     map: {
         flex: 1,
