@@ -23,6 +23,7 @@ export default function useUserTrackLocation() {
       const loc = await Location.watchPositionAsync(
         {
           accuracy: Location.Accuracy.Balanced,
+          timeInterval: 5000,
           distanceInterval: 10
         },
         (newLocation) => {

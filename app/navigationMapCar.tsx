@@ -1,6 +1,6 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet, TouchableOpacity, Text, Platform, View } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     MapView,
     Camera,
@@ -46,6 +46,7 @@ const NavigationMapCar = ({
 }: NavigationMapProps) => {
 
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
+    const [followUser, setFollowUser] = useState(true)
 
     const startingLatitude = userLatitude ?? 0;
     const startingLongitude = userLongitude ?? 0;
@@ -58,6 +59,8 @@ const NavigationMapCar = ({
     const steps = carRoute.routeInstructions;
     const currentStep = steps[currentStepIndex] ?? null;
     const isLastStep = currentStepIndex === steps.length - 1;
+    const camera = useRef<Camera>(null);
+
 
     // Advance step when user gets close enough to the maneuver point
     useEffect(() => {
@@ -104,15 +107,20 @@ const NavigationMapCar = ({
                     </Text>
                 </View>
             )}
-            
+
             <MapView
                 styleURL="mapbox://styles/mapbox/navigation-day-v1"
                 style={styles.map}
                 scaleBarEnabled={false}
                 logoPosition={Platform.OS === "android" ? { bottom: 40, left: 8 } : undefined}
                 attributionPosition={Platform.OS === "android" ? { bottom: 40, right: 8 } : undefined}
+                onTouchStart={() => setFollowUser(false)}
             >
-                <Camera followUserLocation followZoomLevel={18} />
+                <Camera
+                    ref={camera}
+                    followUserLocation={followUser}
+                    followZoomLevel={18}
+                />
                 <UserLocation />
                 {carRoute.route && (
                     <ShapeSource id="routeSource" shape={carRoute.route}>
@@ -126,6 +134,13 @@ const NavigationMapCar = ({
 
             <TouchableOpacity style={styles.exitNavigationButton} onPress={onToggleNavigation}>
                 <Text style={styles.exitButtonText}>X</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+                style={styles.pinButton}
+                onPress={() => setFollowUser(true)}
+            >
+                <Text style={styles.pinText}>↓</Text>
             </TouchableOpacity>
 
         </SafeAreaView>
@@ -174,7 +189,7 @@ const styles = StyleSheet.create({
     },
     exitNavigationButton: {
         position: "absolute",
-        bottom: 120,
+        bottom: 256,
         right: 32,
         padding: 32,
         backgroundColor: "#F5A623",
@@ -185,7 +200,18 @@ const styles = StyleSheet.create({
     exitButtonText: {
         fontSize: 24,
         color: "#1C3557"
-    }
+    },
+    pinButton: {
+        position: "absolute",
+        bottom: 120,
+        right: 32,
+        padding: 24,
+        backgroundColor: "#F5A623",
+        borderRadius: 80,
+        borderWidth: 4,
+        borderColor: "#FFFFFF"
+    },
+    pinText: { color: "#1C3557", fontSize: 32 },
 });
 
 export default NavigationMapCar;
