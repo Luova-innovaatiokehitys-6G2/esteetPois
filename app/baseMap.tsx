@@ -12,14 +12,16 @@ import {
   LocationPuck,
   Images,
 } from "@rnmapbox/maps";
+import * as Location from "expo-location"
 import { Feature, Point } from "geojson";
-import useUserCurrentLocation from "./hooks/userCurrentLocation";
+import useUserTrackLocation from "./hooks/userTrackLocation";
 import ParkingSpots from "./ParkingSpots";
 import LocationMarkers from "./locationSpots";
 import EntranceLocationMarkers from "./entranceSpots";
 import NavigateButton from "./navigateButton";
 import NavigationMapCar from "./navigationMapCar";
 import Loading from "./loading";
+import useUserCurrentLocation from "./hooks/userCurrentLocation";
 
 type SpotProperties = {
   id: string;
@@ -32,14 +34,21 @@ const BaseMap = () => {
   const [destinationLatitude, setDestinationLatitude] = useState(0);
   const [destinationLongitude, setDestinationLongitude] = useState(0);
   const [navigationMapView, setNavigationMapView] = useState(false);
-
+ 
   const { userLocation } = useUserCurrentLocation();
-  const userLatitude = userLocation?.coords.latitude ?? 0;
-  const userLongitude = userLocation?.coords.longitude ?? 0;
+  const { updatedUserLocation } = useUserTrackLocation();
+
+  const userInitialLatitude = userLocation?.coords.latitude ?? 0;
+  const userInitialLongitude = userLocation?.coords.longitude ?? 0;
+  //console.log("lat", userInitialLatitude, "lon",  userInitialLongitude)
+
+  const userLatitude = updatedUserLocation?.coords.latitude ?? 0;
+  const userLongitude = updatedUserLocation?.coords.longitude ?? 0;
+  //console.log("updatedLat", userLatitude, "updateLon", userLongitude)
 
   const camera = useRef<Camera>(null);
 
-  const userLocationFetched = userLatitude !== 0 && userLongitude !== 0;
+  const userLocationFetched = userInitialLatitude !== 0 && userInitialLongitude !== 0;
 
   useEffect(() => {
     if (!userLocationFetched) return;
@@ -67,7 +76,7 @@ const BaseMap = () => {
     setSpots(spotsWithReservation);
   }, [userLocationFetched]);
 
-  useEffect(() => {
+  /*useEffect(() => {
     if (!userLocationFetched) return;
 
     camera.current?.setCamera({
@@ -77,9 +86,7 @@ const BaseMap = () => {
       heading: 0,
       animationDuration: 300,
     });
-  }, [userLongitude, userLatitude]);
-
-  console.log("userlatitude: ", userLatitude, "userLongitude: ", userLongitude)
+  }, [userLongitude, userLatitude]);*/
 
   const handleSelectSpot = (lat: number, lng: number, reserved?: boolean) => {
     if (reserved) {
@@ -135,7 +142,7 @@ const BaseMap = () => {
         >
           <Camera
             ref={camera}
-            centerCoordinate={[userLongitude, userLatitude]}
+            centerCoordinate={[userInitialLongitude, userInitialLongitude]}
             zoomLevel={18}
             pitch={54}
             heading={0}
@@ -169,8 +176,6 @@ const BaseMap = () => {
   } else {
     return <Loading />
   }
-
-
 };
 
 const styles = StyleSheet.create({
