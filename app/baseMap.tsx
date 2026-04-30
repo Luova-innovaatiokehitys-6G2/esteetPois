@@ -12,7 +12,6 @@ import {
   LocationPuck,
   Images,
 } from "@rnmapbox/maps";
-import * as Location from "expo-location"
 import { Feature, Point } from "geojson";
 import useUserTrackLocation from "./hooks/userTrackLocation";
 import ParkingSpots from "./ParkingSpots";
@@ -40,11 +39,11 @@ const BaseMap = () => {
 
   const userInitialLatitude = userLocation?.coords.latitude ?? 0;
   const userInitialLongitude = userLocation?.coords.longitude ?? 0;
-  //console.log("lat", userInitialLatitude, "lon",  userInitialLongitude)
+  console.log("lat", userInitialLatitude, "lon",  userInitialLongitude)
 
   const userLatitude = updatedUserLocation?.coords.latitude ?? 0;
   const userLongitude = updatedUserLocation?.coords.longitude ?? 0;
-  //console.log("updatedLat", userLatitude, "updateLon", userLongitude)
+  console.log("updatedLat", userLatitude, "updateLon", userLongitude)
 
   const camera = useRef<Camera>(null);
 
@@ -76,17 +75,16 @@ const BaseMap = () => {
     setSpots(spotsWithReservation);
   }, [userLocationFetched]);
 
-  /*useEffect(() => {
+  useEffect(() => {
     if (!userLocationFetched) return;
-
     camera.current?.setCamera({
-      centerCoordinate: [userLongitude, userLatitude],
+      centerCoordinate: [userInitialLongitude, userInitialLatitude],
       zoomLevel: 18,
       pitch: 54,
       heading: 0,
       animationDuration: 300,
     });
-  }, [userLongitude, userLatitude]);*/
+  }, [userLocationFetched]);
 
   const handleSelectSpot = (lat: number, lng: number, reserved?: boolean) => {
     if (reserved) {
@@ -118,6 +116,8 @@ const BaseMap = () => {
     setNavigationMapView(true);
   };
 
+  console.log(userLocationFetched)
+
   if (navigationMapView && userLocationFetched && destinationLatitude !== 0 && destinationLongitude !== 0) {
     return (
       <NavigationMapCar
@@ -141,8 +141,8 @@ const BaseMap = () => {
 
         >
           <Camera
-            ref={camera}
-            centerCoordinate={[userInitialLongitude, userInitialLongitude]}
+            ref={camera} 
+            centerCoordinate={[userInitialLongitude, userInitialLatitude]}
             zoomLevel={18}
             pitch={54}
             heading={0}
