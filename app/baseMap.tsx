@@ -22,6 +22,7 @@ import NavigateButton from "./navigateButton";
 import NavigationMapCar from "./navigationMapCar";
 import Loading from "./loading";
 import useUserCurrentLocation from "./hooks/userCurrentLocation";
+import fixedCoordinateList, { FixedCoordinate } from './hooks/fetchCoordinates';
 
 type SpotProperties = {
   id: string;
@@ -51,30 +52,52 @@ const BaseMap = () => {
 
   const userLocationFetched = userInitialLatitude !== 0 && userInitialLongitude !== 0;
 
-  useEffect(() => {
-    if (!userLocationFetched) return;
-
-    const baseSpots: Feature<Point, SpotProperties>[] = [
-      { type: "Feature", geometry: { type: "Point", coordinates: [25.470315, 65.0612] }, properties: { id: "1" } },
-      { type: "Feature", geometry: { type: "Point", coordinates: [25.470585, 65.061214] }, properties: { id: "2" } },
-      { type: "Feature", geometry: { type: "Point", coordinates: [25.470368, 65.060995] }, properties: { id: "3" } },
-      { type: "Feature", geometry: { type: "Point", coordinates: [25.470295, 65.061125] }, properties: { id: "4" } },
-      { type: "Feature", geometry: { type: "Point", coordinates: [25.470287, 65.061086] }, properties: { id: "5" } },
-    ];
+  const generateSpotsNearLocation = (
+    lat: number,
+    lng: number,
+    locationId: string
+  ): Feature<Point, SpotProperties>[] => {
+    const spots = Array.from({ length: 5 }, (_, i) => ({
+      type: "Feature" as const,
+      geometry: {
+        type: "Point" as const,
+        coordinates: [
+          lng + Math.random() * 0.0003 * Math.cos(Math.random() * 2 * Math.PI),
+          lat + Math.random() * 0.0003 * Math.sin(Math.random() * 2 * Math.PI),
+        ],
+      },
+      properties: { id: `${locationId}-${i + 1}` },
+    }));
 
     const reservedCount = Math.floor(Math.random() * 2) + 2;
-    const shuffled = [...baseSpots].sort(() => 0.5 - Math.random());
-    const reservedIds = shuffled.slice(0, reservedCount).map(s => s.properties.id);
+    const reservedIds = [...spots]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, reservedCount)
+      .map((s) => s.properties.id);
 
-    const spotsWithReservation = baseSpots.map(spot => ({
+    return spots.map((spot) => ({
       ...spot,
       properties: {
         ...spot.properties,
         reserved: reservedIds.includes(spot.properties.id),
       },
     }));
+  };
 
-    setSpots(spotsWithReservation);
+  useEffect(() => {
+    if (!userLocationFetched) return;
+
+    const locations: FixedCoordinate[] = fixedCoordinateList();
+
+    const allSpots = locations.flatMap((location) =>
+      generateSpotsNearLocation(
+        location.latitude,
+        location.longitude,
+        String(location.id)
+      )
+    );
+
+    setSpots(allSpots);
   }, [userLocationFetched]);
 
   useEffect(() => {
@@ -200,7 +223,7 @@ const BaseMap = () => {
       </SafeAreaView>
     );
   } else {
-    return <Loading />
+    return <Loading />;
   }
 };
 
