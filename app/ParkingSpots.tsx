@@ -45,9 +45,9 @@ const ParkingSpots = ({ spots, onSelectSpot }: Props) => {
           style={{
             iconImage: [
               "case",
-              ["get", "reserved"], // If reserved = true
+              ["get", "reserved"],
               "reserved",
-              "free"               // Else free
+              "free"               
             ],
             iconSize: 0.8,
             iconAllowOverlap: true,

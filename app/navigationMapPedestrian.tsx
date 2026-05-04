@@ -1,6 +1,6 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet, View, Text, TouchableOpacity, Platform } from "react-native";
-import fixedEntranceCordinateList from "./hooks/fetchEntranceCoordinates";
+import fixedEntranceCordinateList, { EntranceCoordinate } from "./hooks/fetchEntranceCoordinates";
 import { useState, useEffect, useRef } from "react";
 import { getDistance } from "geolib";
 import {
@@ -20,14 +20,6 @@ interface NavigationPedestrianMapProps {
     startingLongitude: number;
 }
 
-type EntranceCoordinate = {
-    id: number;
-    name: string;
-    latitude: number;
-    longitude: number;
-};
-
-// Haversine formula
 const getDistanceMetres = (
     lat1: number, lon1: number,
     lat2: number, lon2: number
@@ -54,38 +46,53 @@ const NavigationMapPedestrian = ({
     const [warningMsg, setWarningMsg] = useState<string | null>(null);
     const [showWarning, setShowWarning] = useState(false);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
-    const [followUser, setFollowUser] = useState(true)
+    const [followUser, setFollowUser] = useState(true);
+    const [entranceCoordinates, setEntranceCoordinates] = useState<EntranceCoordinate[]>([]);
 
     const hazardLatitude: number = 65.0617972213329;
     const hazardLongitude: number = 25.46750967943799;
 
-    const entranceCoordinates: EntranceCoordinate[] = fixedEntranceCordinateList();
+    useEffect(() => {
+        const loadEntrances = async () => {
+            try {
+                const entrances = await fixedEntranceCordinateList();
+                if (Array.isArray(entrances)) {
+                    setEntranceCoordinates(entrances);
+                } else {
+                    console.error("Entrances is not an array:", entrances);
+                }
+            } catch (err) {
+                console.error("Failed to load entrances:", err);
+            }
+        };
+        loadEntrances();
+    }, []);
 
-    const nearestEntrance = entranceCoordinates.reduce((closest, entrance) => {
-        const distance = getDistance(
-            { latitude: startingLatitude, longitude: startingLongitude },
-            { latitude: entrance.latitude, longitude: entrance.longitude }
-        );
+    const nearestEntrance = entranceCoordinates.length > 0
+        ? entranceCoordinates.reduce((closest, entrance) => {
+            const distance = getDistance(
+                { latitude: startingLatitude, longitude: startingLongitude },
+                { latitude: entrance.latitude, longitude: entrance.longitude }
+            );
+            if (!closest || distance < closest.distance) {
+                return { entrance, distance };
+            }
+            return closest;
+        }, null as { entrance: EntranceCoordinate; distance: number } | null)
+        : null;
 
-        if (!closest || distance < closest.distance) {
-            return { entrance, distance };
-        }
-        return closest;
-    }, null as { entrance: EntranceCoordinate; distance: number } | null);
-
-    const entranceLatitude = nearestEntrance?.entrance.latitude ?? entranceCoordinates[0].latitude;
-    const entranceLongitude = nearestEntrance?.entrance.longitude ?? entranceCoordinates[0].longitude;
+    const entranceLatitude = nearestEntrance?.entrance.latitude ?? 0;
+    const entranceLongitude = nearestEntrance?.entrance.longitude ?? 0;
 
     const walkingRoute = useWalkingRoute(
         { latitude: startingLatitude, longitude: startingLongitude },
         { latitude: entranceLatitude, longitude: entranceLongitude }
-    )
+    );
 
     const steps = walkingRoute.routeInstructions;
     const currentStep = steps[currentStepIndex] ?? null;
     const isLastStep = currentStepIndex === steps.length - 1;
     const camera = useRef<Camera>(null);
-
 
     useEffect(() => {
         if (!steps.length || isLastStep) return;
@@ -108,7 +115,6 @@ const NavigationMapPedestrian = ({
         }
     }, [isLastStep]);
 
-
     useEffect(() => {
         if (!startingLatitude || !startingLongitude) return;
 
@@ -126,18 +132,6 @@ const NavigationMapPedestrian = ({
             setShowWarning(false);
         }
     }, [startingLatitude, startingLongitude]);
-
-    console.log("starting", startingLatitude, startingLongitude)
-    console.log("hazard", hazardLatitude, hazardLongitude)
-
-    const userCoordinates = [
-        { latitude: startingLatitude, longitude: startingLongitude },
-        { latitude: entranceLatitude, longitude: entranceLongitude },
-    ];
-
-    const arrivedAtDestination = () => {
-        onToggleNavigation();
-    };
 
     const dismissWarning = () => setShowWarning(false);
 
@@ -160,7 +154,6 @@ const NavigationMapPedestrian = ({
                         </Text>
                     </View>
                 )}
-
                 <MapView
                     styleURL="mapbox://styles/mapbox/navigation-day-v1"
                     style={styles.map}
@@ -194,12 +187,14 @@ const NavigationMapPedestrian = ({
                             />
                         </ShapeSource>
                     )}
-                    <PointAnnotation
-                        id="destinationPoint"
-                        coordinate={[entranceLongitude, entranceLatitude]}
-                    >
-                        <Text style={{ fontSize: 24, width: 48, height: 30, textAlign: 'center' }}>🚪</Text>
-                    </PointAnnotation>
+                    {entranceLongitude !== 0 && entranceLatitude !== 0 && (
+                        <PointAnnotation
+                            id="destinationPoint"
+                            coordinate={[entranceLongitude, entranceLatitude]}
+                        >
+                            <Text style={{ fontSize: 24, width: 48, height: 30, textAlign: 'center' }}>🚪</Text>
+                        </PointAnnotation>
+                    )}
                     <PointAnnotation
                         id="hazardPoint"
                         coordinate={[hazardLongitude, hazardLatitude]}
@@ -210,14 +205,12 @@ const NavigationMapPedestrian = ({
                 <TouchableOpacity style={styles.exitNavigationButton} onPress={onToggleNavigation}>
                     <Text style={styles.exitButtonText}>X</Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                     style={styles.pinButton}
                     onPress={() => setFollowUser(true)}
                 >
                     <Text style={styles.pinText}>↓</Text>
                 </TouchableOpacity>
-
                 <View style={styles.warningContainer}>
                     <TouchableOpacity onPress={dismissWarning}>
                         <Text style={styles.text}>{warningMsg}</Text>
@@ -244,7 +237,6 @@ const NavigationMapPedestrian = ({
                         </Text>
                     </View>
                 )}
-
                 <MapView
                     styleURL="mapbox://styles/mapbox/navigation-day-v1"
                     style={styles.map}
@@ -279,17 +271,18 @@ const NavigationMapPedestrian = ({
                             />
                         </ShapeSource>
                     )}
-                    <PointAnnotation
-                        id="destinationPoint"
-                        coordinate={[entranceLongitude, entranceLatitude]}
-                    >
-                        <Text style={{ fontSize: 24, width: 48, height: 30, textAlign: 'center' }}>🚪</Text>
-                    </PointAnnotation>
+                    {entranceLongitude !== 0 && entranceLatitude !== 0 && (
+                        <PointAnnotation
+                            id="destinationPoint"
+                            coordinate={[entranceLongitude, entranceLatitude]}
+                        >
+                            <Text style={{ fontSize: 24, width: 48, height: 30, textAlign: 'center' }}>🚪</Text>
+                        </PointAnnotation>
+                    )}
                 </MapView>
                 <TouchableOpacity style={styles.exitNavigationButton} onPress={onToggleNavigation}>
                     <Text style={styles.exitButtonText}>X</Text>
                 </TouchableOpacity>
-
                 <TouchableOpacity
                     style={styles.pinButton}
                     onPress={() => setFollowUser(true)}
