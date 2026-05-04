@@ -16,8 +16,11 @@ export type EntranceCoordinate = {
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 
 export const fixedCoordinateList = async (): Promise<FixedCoordinate[]> => {
+    console.log("API_URL: ", process.env.EXPO_PUBLIC_API_URL);
     const response = await fetch(`${API_URL}/locations`);
+    console.log("response status: ", response.status);
     const data = await response.json();
+    console.log("fetched locations: ", data);
     return data.coordinates;
 };
 

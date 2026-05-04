@@ -27,6 +27,38 @@ type SpotProperties = {
   reserved?: boolean;
 };
 
+const generateSpotsNearLocation = (
+  lat: number,
+  lng: number,
+  locationId: string
+): Feature<Point, SpotProperties>[] => {
+  const spots = Array.from({ length: 5 }, (_, i) => ({
+    type: "Feature" as const,
+    geometry: {
+      type: "Point" as const,
+      coordinates: [
+        lng + Math.random() * 0.0003 * Math.cos(Math.random() * 2 * Math.PI),
+        lat + Math.random() * 0.0003 * Math.sin(Math.random() * 2 * Math.PI),
+      ],
+    },
+    properties: { id: `${locationId}-${i + 1}` },
+  }));
+
+  const reservedCount = Math.floor(Math.random() * 2) + 2;
+  const reservedIds = [...spots]
+    .sort(() => 0.5 - Math.random())
+    .slice(0, reservedCount)
+    .map((s) => s.properties.id);
+
+  return spots.map((spot) => ({
+    ...spot,
+    properties: {
+      ...spot.properties,
+      reserved: reservedIds.includes(spot.properties.id),
+    },
+  }));
+};
+
 const BaseMap = () => {
   const [spots, setSpots] = useState<Feature<Point, SpotProperties>[]>([]);
   const [showNavigationButton, setShowNavigationButton] = useState(false);
@@ -42,45 +74,12 @@ const BaseMap = () => {
 
   const userLocationFetched = userLatitude !== 0 && userLongitude !== 0;
 
-  const generateSpotsNearLocation = (
-    lat: number,
-    lng: number,
-    locationId: string
-  ): Feature<Point, SpotProperties>[] => {
-    const spots = Array.from({ length: 5 }, (_, i) => ({
-      type: "Feature" as const,
-      geometry: {
-        type: "Point" as const,
-        coordinates: [
-          lng + Math.random() * 0.0003 * Math.cos(Math.random() * 2 * Math.PI),
-          lat + Math.random() * 0.0003 * Math.sin(Math.random() * 2 * Math.PI),
-        ],
-      },
-      properties: { id: `${locationId}-${i + 1}` },
-    }));
-
-    const reservedCount = Math.floor(Math.random() * 2) + 2;
-    const reservedIds = [...spots]
-      .sort(() => 0.5 - Math.random())
-      .slice(0, reservedCount)
-      .map((s) => s.properties.id);
-
-    return spots.map((spot) => ({
-      ...spot,
-      properties: {
-        ...spot.properties,
-        reserved: reservedIds.includes(spot.properties.id),
-      },
-    }));
-  };
-
   useEffect(() => {
     if (!userLocationFetched) return;
 
     const loadSpots = async () => {
       try {
         const locations: FixedCoordinate[] = await fixedCoordinateList();
-
         const allSpots = locations.flatMap((location) =>
           generateSpotsNearLocation(
             location.latitude,
@@ -88,7 +87,6 @@ const BaseMap = () => {
             String(location.id)
           )
         );
-
         setSpots(allSpots);
       } catch (err) {
         console.error("Failed to load spots:", err);
@@ -96,7 +94,7 @@ const BaseMap = () => {
     };
 
     loadSpots();
-  }, [userLocationFetched]);
+  }, [userLocationFetched, navigationMapView]);
 
   useEffect(() => {
     if (!userLocationFetched) return;
@@ -185,7 +183,10 @@ const BaseMap = () => {
           <Images images={{ headingArrow: require("../assets/images/headingArrow.png") }} />
           <LocationPuck bearingImage="headingArrow" puckBearing="heading" puckBearingEnabled visible />
           <ParkingSpots spots={spots} onSelectSpot={handleSelectSpot} />
-          <LocationMarkers toggleNavigation={toggleNavigationFromMarker} />
+          <LocationMarkers
+            toggleNavigation={toggleNavigationFromMarker}
+            navigationMapView={navigationMapView}
+          />
           <EntranceLocationMarkers toggleNavigation={toggleNavigationFromMarker} />
         </MapView>
         <TouchableOpacity

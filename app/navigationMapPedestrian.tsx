@@ -119,6 +119,10 @@ const NavigationMapPedestrian = ({
         setCurrentStepIndex(prev => prev + 1);
     }
 
+    const onToggleInstructionChangeBackward = () => {
+        setCurrentStepIndex(prev => prev - 1);
+    }
+
     useEffect(() => {
         if (!startingLatitude || !startingLongitude) return;
 
