@@ -104,7 +104,7 @@ const BaseMap = () => {
     };
 
     loadSpots();
-  }, [userLocationFetched]);
+  }, [userLocationFetched, navigationMapView]);
 
   useEffect(() => {
     if (!userLocationFetched) return;
