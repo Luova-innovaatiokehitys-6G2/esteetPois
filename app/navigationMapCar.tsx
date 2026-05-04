@@ -102,8 +102,6 @@ const NavigationMapCar = ({
                             </Text>
                         </View>
                     </View>
-
-                    {/* Step counter — helpful for debugging, remove if not needed */}
                     <Text style={styles.stepCounter}>
                         Step {currentStepIndex + 1} of {steps.length}
                     </Text>

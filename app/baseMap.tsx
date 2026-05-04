@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
 import {
   Platform,
   StyleSheet,
@@ -6,11 +6,15 @@ import {
   Text
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
+import Mapbox, {
   Camera,
   MapView,
   LocationPuck,
   Images,
+  CircleLayer,
+  FillLayer,
+  ShapeSource,
+  PointAnnotation
 } from "@rnmapbox/maps";
 import { Feature, Point } from "geojson";
 import useUserTrackLocation from "./hooks/userTrackLocation";
@@ -33,13 +37,14 @@ const BaseMap = () => {
   const [destinationLatitude, setDestinationLatitude] = useState(0);
   const [destinationLongitude, setDestinationLongitude] = useState(0);
   const [navigationMapView, setNavigationMapView] = useState(false);
- 
+  const [destinationMarker, setDestinationMarker] = useState(false)
+
   const { userLocation } = useUserCurrentLocation();
   const { updatedUserLocation } = useUserTrackLocation();
 
   const userInitialLatitude = userLocation?.coords.latitude ?? 0;
   const userInitialLongitude = userLocation?.coords.longitude ?? 0;
-  console.log("lat", userInitialLatitude, "lon",  userInitialLongitude)
+  console.log("lat", userInitialLatitude, "lon", userInitialLongitude)
 
   const userLatitude = updatedUserLocation?.coords.latitude ?? 0;
   const userLongitude = updatedUserLocation?.coords.longitude ?? 0;
@@ -138,10 +143,34 @@ const BaseMap = () => {
           scaleBarEnabled={false}
           logoPosition={Platform.OS === "android" ? { bottom: 40, left: 8 } : undefined}
           attributionPosition={Platform.OS === "android" ? { bottom: 40, right: 8 } : undefined}
-
+          onLongPress={(feature) => {
+            const gmetry = feature.geometry
+            // Check if gmetry is a point, if not return without doing anything
+            if (gmetry.type !== "Point") return;
+            const [lng, lat] = gmetry.coordinates;
+            setDestinationLatitude(lat);
+            setDestinationLongitude(lng);
+            setShowNavigationButton(true);
+            setDestinationMarker(true)
+          }
+          }
+          onPress={() => {
+            setShowNavigationButton(false);
+            setDestinationMarker(false);
+            setDestinationLatitude(0);
+            setDestinationLongitude(0);
+          }}
         >
+          {destinationMarker && (
+            <PointAnnotation
+              id="destination"
+              coordinate={[destinationLongitude, destinationLatitude]}
+            >
+              <Text style={styles.destinationMarkerText}>📌</Text>
+            </PointAnnotation>
+          )}
           <Camera
-            ref={camera} 
+            ref={camera}
             centerCoordinate={[userInitialLongitude, userInitialLatitude]}
             zoomLevel={18}
             pitch={54}
@@ -191,7 +220,17 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: "#FFFFFF"
   },
-  pinText: { color: "#1C3557", fontSize: 32 },
+  pinText: {
+    color: "#1C3557",
+    fontSize: 32
+  },
+  destinationMarkerText: {
+    color: "#1C3557",
+    fontSize: 24,
+    width: 32,
+    height: 30,
+    textAlign: 'center'
+  }
 });
 
 export default BaseMap;
