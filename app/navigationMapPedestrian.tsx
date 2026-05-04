@@ -115,6 +115,10 @@ const NavigationMapPedestrian = ({
         }
     }, [isLastStep]);
 
+    const onToggleInstructionChangeForward = () => {
+        setCurrentStepIndex(prev => prev + 1);
+    }
+
     useEffect(() => {
         if (!startingLatitude || !startingLongitude) return;
 
@@ -149,9 +153,23 @@ const NavigationMapPedestrian = ({
                                 </Text>
                             </View>
                         </View>
-                        <Text style={styles.stepCounter}>
-                            Step {currentStepIndex + 1} of {steps.length}
-                        </Text>
+                        <View style={styles.stepCounterContainer}>
+                            <TouchableOpacity
+                                style={styles.stepCounterButton}
+                                onPress={onToggleInstructionChangeBackward}
+                            >
+                                <Text style={styles.stepCounterButtonText}>{"<-"}</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.stepCounter}>
+                                Step {currentStepIndex + 1} of {steps.length}
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.stepCounterButton}
+                                onPress={onToggleInstructionChangeForward}
+                            >
+                                <Text style={styles.stepCounterButtonText}>{"->"}</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 )}
                 <MapView
@@ -232,9 +250,23 @@ const NavigationMapPedestrian = ({
                                 </Text>
                             </View>
                         </View>
-                        <Text style={styles.stepCounter}>
-                            Step {currentStepIndex + 1} of {steps.length}
-                        </Text>
+                        <View style={styles.stepCounterContainer}>
+                            <TouchableOpacity
+                                style={styles.stepCounterButton}
+                                onPress={onToggleInstructionChangeBackward}
+                            >
+                                <Text style={styles.stepCounterButtonText}>{"<-"}</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.stepCounter}>
+                                Step {currentStepIndex + 1} of {steps.length}
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.stepCounterButton}
+                                onPress={onToggleInstructionChangeForward}
+                            >
+                                <Text style={styles.stepCounterButtonText}>{"->"}</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 )}
                 <MapView
@@ -373,6 +405,16 @@ const styles = StyleSheet.create({
         borderColor: "#FFFFFF"
     },
     pinText: { color: "#1C3557", fontSize: 32 },
+    stepCounterContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between"
+    },
+    stepCounterButton: {
+    },
+    stepCounterButtonText: {
+        fontSize: 16,
+        color: "#FFFFFF"
+    }
 });
 
 export default NavigationMapPedestrian;
