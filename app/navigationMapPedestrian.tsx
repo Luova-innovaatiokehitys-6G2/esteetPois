@@ -56,8 +56,8 @@ const NavigationMapPedestrian = ({
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [followUser, setFollowUser] = useState(true)
 
-    const hazardLatitude: number = 65.061125;
-    const hazardLongitude: number = 25.470295;
+    const hazardLatitude: number = 65.0617972213329;
+    const hazardLongitude: number = 25.46750967943799;
 
     const entranceCoordinates: EntranceCoordinate[] = fixedEntranceCordinateList();
 
@@ -199,6 +199,12 @@ const NavigationMapPedestrian = ({
                         coordinate={[entranceLongitude, entranceLatitude]}
                     >
                         <Text style={{ fontSize: 24, width: 48, height: 30, textAlign: 'center' }}>🚪</Text>
+                    </PointAnnotation>
+                    <PointAnnotation
+                        id="hazardPoint"
+                        coordinate={[hazardLongitude, hazardLatitude]}
+                    >
+                        <Text style={{ fontSize: 40, width: 56, height: 56, textAlign: 'center', color: "#FF6B35" }}>⚠</Text>
                     </PointAnnotation>
                 </MapView>
                 <TouchableOpacity style={styles.exitNavigationButton} onPress={onToggleNavigation}>
