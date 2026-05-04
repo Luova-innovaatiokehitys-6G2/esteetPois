@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Platform,
   StyleSheet,
@@ -6,14 +6,11 @@ import {
   Text
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Mapbox, {
+import {
   Camera,
   MapView,
   LocationPuck,
   Images,
-  CircleLayer,
-  FillLayer,
-  ShapeSource,
   PointAnnotation
 } from "@rnmapbox/maps";
 import { Feature, Point } from "geojson";
