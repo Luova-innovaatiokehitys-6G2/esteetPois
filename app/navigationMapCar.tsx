@@ -1,14 +1,17 @@
 import { SafeAreaView } from "react-native-safe-area-context";
 import { StyleSheet, TouchableOpacity, Text, Platform, View } from "react-native";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
     MapView,
     Camera,
     ShapeSource,
     LineLayer,
-    UserLocation
+    UserLocation,
+    PointAnnotation,
+    UserTrackingMode
 } from "@rnmapbox/maps";
 import useRoute from "./hooks/fetchRoute";
+import NavigationMapPedestrian from "./navigationMapPedestrian";
 
 interface NavigationMapProps {
     onToggleNavigation: () => void;
@@ -18,7 +21,7 @@ interface NavigationMapProps {
     destinationLongitude: number;
 }
 
-// Haversine formula — returns distance in metres between two coords
+// Haversine formula
 const getDistanceMetres = (
     lat1: number, lon1: number,
     lat2: number, lon2: number
@@ -34,7 +37,6 @@ const getDistanceMetres = (
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-// How close (metres) the user must be to trigger the next step
 const STEP_ADVANCE_THRESHOLD = 20;
 
 const NavigationMapCar = ({
@@ -46,6 +48,8 @@ const NavigationMapCar = ({
 }: NavigationMapProps) => {
 
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
+    const [followUser, setFollowUser] = useState(true)
+    const [reachedParkingLot, setReachedParkingLot] = useState(false)
 
     const startingLatitude = userLatitude ?? 0;
     const startingLongitude = userLongitude ?? 0;
@@ -56,15 +60,16 @@ const NavigationMapCar = ({
     );
 
     const steps = carRoute.routeInstructions;
+    console.log(steps)
     const currentStep = steps[currentStepIndex] ?? null;
     const isLastStep = currentStepIndex === steps.length - 1;
+    const camera = useRef<Camera>(null);
 
-    // Advance step when user gets close enough to the maneuver point
     useEffect(() => {
         if (!steps.length || isLastStep) return;
 
         const nextStep = steps[currentStepIndex + 1];
-        if (!nextStep?.location) return; // location = [lng, lat] from maneuver
+        if (!nextStep?.location) return;
 
         const [nextLng, nextLat] = nextStep.location;
         const distance = getDistanceMetres(userLatitude, userLongitude, nextLat, nextLng);
@@ -74,62 +79,105 @@ const NavigationMapCar = ({
         }
     }, [userLatitude, userLongitude]);
 
-    // Trigger exit when the final "arrive" step is reached
     useEffect(() => {
         if (isLastStep && steps.length > 0) {
-            // Small delay so the user sees the arrival message
             const timer = setTimeout(onToggleNavigation, 3000);
             return () => clearTimeout(timer);
         }
     }, [isLastStep]);
 
-    return (
-        <SafeAreaView style={styles.container}>
+    const onToggleWalkingNavigation = () => {
+        setReachedParkingLot(prev => !prev);
+    };
 
-            {currentStep && (
-                <View style={styles.instructionsContainer}>
-                    <View style={styles.instructionsTextContainer}>
-                        <Text style={styles.instructionsIcon}>{currentStep.icon}</Text>
-                        <View style={styles.instructionsText}>
-                            <Text style={styles.directionsText}>{currentStep.instruction}</Text>
-                            <Text style={[styles.directionsText, { fontSize: 13, opacity: 0.7 }]}>
-                                {currentStep.distance}
-                            </Text>
+    if (reachedParkingLot) {
+        return (
+            <NavigationMapPedestrian
+                onToggleNavigation={onToggleNavigation}
+                startingLatitude={destinationLatitude}
+                startingLongitude={destinationLongitude}
+            />
+        )
+    } else {
+        return (
+            <SafeAreaView style={styles.container}>
+
+                {currentStep && (
+                    <View style={styles.instructionsContainer}>
+                        <View style={styles.instructionsTextContainer}>
+                            <Text style={styles.instructionsIcon}>{currentStep.icon}</Text>
+                            <View style={styles.instructionsText}>
+                                <Text style={styles.directionsText}>{currentStep.instruction}</Text>
+                                <Text style={[styles.directionsText, { fontSize: 13, opacity: 0.7 }]}>
+                                    {currentStep.distance}
+                                </Text>
+                            </View>
                         </View>
+                        <Text style={styles.stepCounter}>
+                            Step {currentStepIndex + 1} of {steps.length}
+                        </Text>
                     </View>
-
-                    {/* Step counter — helpful for debugging, remove if not needed */}
-                    <Text style={styles.stepCounter}>
-                        Step {currentStepIndex + 1} of {steps.length}
-                    </Text>
-                </View>
-            )}
-            
-            <MapView
-                styleURL="mapbox://styles/mapbox/navigation-day-v1"
-                style={styles.map}
-                scaleBarEnabled={false}
-                logoPosition={Platform.OS === "android" ? { bottom: 40, left: 8 } : undefined}
-                attributionPosition={Platform.OS === "android" ? { bottom: 40, right: 8 } : undefined}
-            >
-                <Camera followUserLocation followZoomLevel={18} />
-                <UserLocation />
-                {carRoute.route && (
-                    <ShapeSource id="routeSource" shape={carRoute.route}>
-                        <LineLayer
-                            id="routeLine"
-                            style={{ lineColor: "#F5A623", lineWidth: 8 }}
-                        />
-                    </ShapeSource>
                 )}
-            </MapView>
 
-            <TouchableOpacity style={styles.exitNavigationButton} onPress={onToggleNavigation}>
-                <Text style={styles.exitButtonText}>X</Text>
-            </TouchableOpacity>
+                <MapView
+                    styleURL="mapbox://styles/mapbox/navigation-day-v1"
+                    style={styles.map}
+                    scaleBarEnabled={false}
+                    logoPosition={Platform.OS === "android" ? { bottom: 40, left: 8 } : undefined}
+                    attributionPosition={Platform.OS === "android" ? { bottom: 40, right: 8 } : undefined}
+                    onTouchStart={() => setFollowUser(false)}
+                >
+                    <Camera
+                        ref={camera}
+                        animationMode="flyTo"
+                        animationDuration={1000}
+                        followUserLocation={followUser}
+                        followUserMode={UserTrackingMode.FollowWithCourse}
+                        followZoomLevel={18}
+                        followPitch={32}
+                    />
+                    <UserLocation
+                        androidRenderMode="gps"
+                        showsUserHeadingIndicator={true}
+                    />
+                    {carRoute.route && (
+                        <ShapeSource
+                            id="routeSource"
+                            shape={carRoute.route}
+                            maxZoomLevel={18}
+                        >
+                            <LineLayer
+                                id="routeLine"
+                                style={{ lineColor: "#F5A623", lineWidth: 8 }}
+                            />
+                        </ShapeSource>
+                    )}
+                    <PointAnnotation
+                        id="destinationPoint"
+                        coordinate={[destinationLongitude, destinationLatitude]}
+                    >
+                        <Text style={{ fontSize: 24, width: 48, height: 30, textAlign: 'center' }}>♿</Text>
+                    </PointAnnotation>
+                </MapView>
 
-        </SafeAreaView>
-    );
+                <TouchableOpacity style={styles.toggleWalkingNavigationButton} onPress={onToggleWalkingNavigation}>
+                    <Text style={styles.exitButtonText}>➡</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={styles.exitNavigationButton} onPress={onToggleNavigation}>
+                    <Text style={styles.exitButtonText}>X</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    style={styles.pinButton}
+                    onPress={() => setFollowUser(true)}
+                >
+                    <Text style={styles.pinText}>↓</Text>
+                </TouchableOpacity>
+
+            </SafeAreaView>
+        );
+    }
 };
 
 const styles = StyleSheet.create({
@@ -174,7 +222,7 @@ const styles = StyleSheet.create({
     },
     exitNavigationButton: {
         position: "absolute",
-        bottom: 120,
+        bottom: 256,
         right: 32,
         padding: 32,
         backgroundColor: "#F5A623",
@@ -185,6 +233,27 @@ const styles = StyleSheet.create({
     exitButtonText: {
         fontSize: 24,
         color: "#1C3557"
+    },
+    pinButton: {
+        position: "absolute",
+        bottom: 120,
+        right: 32,
+        padding: 24,
+        backgroundColor: "#F5A623",
+        borderRadius: 80,
+        borderWidth: 4,
+        borderColor: "#FFFFFF"
+    },
+    pinText: { color: "#1C3557", fontSize: 32 },
+    toggleWalkingNavigationButton: {
+        position: "absolute",
+        bottom: 392,
+        right: 32,
+        padding: 32,
+        backgroundColor: "#F5A623",
+        borderRadius: 80,
+        borderWidth: 4,
+        borderColor: "#FFFFFF"
     }
 });
 
