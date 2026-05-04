@@ -81,14 +81,21 @@ const NavigationMapCar = ({
 
     useEffect(() => {
         if (isLastStep && steps.length > 0) {
-            const timer = setTimeout(onToggleNavigation, 3000);
-            return () => clearTimeout(timer);
+            setReachedParkingLot(true)
         }
     }, [isLastStep]);
 
     const onToggleWalkingNavigation = () => {
         setReachedParkingLot(prev => !prev);
     };
+
+    const onToggleInstructionChangeForward = () => {
+        setCurrentStepIndex(prev => prev + 1);
+    }
+
+    const onToggleInstructionChangeBackward = () => {
+        setCurrentStepIndex(prev => prev - 1);
+    }
 
     if (reachedParkingLot) {
         return (
@@ -113,9 +120,23 @@ const NavigationMapCar = ({
                                 </Text>
                             </View>
                         </View>
-                        <Text style={styles.stepCounter}>
-                            Step {currentStepIndex + 1} of {steps.length}
-                        </Text>
+                        <View style={styles.stepCounterContainer}>
+                            <TouchableOpacity
+                                style={styles.stepCounterButton}
+                                onPress={onToggleInstructionChangeBackward}
+                            >
+                                <Text style={styles.stepCounterButtonText}>{"<-"}</Text>
+                            </TouchableOpacity>
+                            <Text style={styles.stepCounter}>
+                                Step {currentStepIndex + 1} of {steps.length}
+                            </Text>
+                            <TouchableOpacity
+                                style={styles.stepCounterButton}
+                                onPress={onToggleInstructionChangeForward}
+                            >
+                                <Text style={styles.stepCounterButtonText}>{"->"}</Text>
+                            </TouchableOpacity>
+                        </View>
                     </View>
                 )}
 
@@ -161,7 +182,7 @@ const NavigationMapCar = ({
                 </MapView>
 
                 <TouchableOpacity style={styles.toggleWalkingNavigationButton} onPress={onToggleWalkingNavigation}>
-                    <Text style={styles.exitButtonText}>➡</Text>
+                    <Text style={styles.exitButtonText}>{"->"}</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity style={styles.exitNavigationButton} onPress={onToggleNavigation}>
@@ -254,6 +275,16 @@ const styles = StyleSheet.create({
         borderRadius: 80,
         borderWidth: 4,
         borderColor: "#FFFFFF"
+    },
+    stepCounterContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between"
+    },
+    stepCounterButton: {
+    },
+    stepCounterButtonText: {
+        fontSize: 16,
+        color: "#FFFFFF"
     }
 });
 
