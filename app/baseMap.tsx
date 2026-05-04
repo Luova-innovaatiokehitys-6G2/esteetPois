@@ -11,18 +11,16 @@ import {
   MapView,
   LocationPuck,
   Images,
-  PointAnnotation
 } from "@rnmapbox/maps";
 import { Feature, Point } from "geojson";
-import useUserTrackLocation from "./hooks/userTrackLocation";
+import useUserCurrentLocation from "./hooks/userCurrentLocation";
 import ParkingSpots from "./ParkingSpots";
 import LocationMarkers from "./locationSpots";
 import EntranceLocationMarkers from "./entranceSpots";
 import NavigateButton from "./navigateButton";
 import NavigationMapCar from "./navigationMapCar";
 import Loading from "./loading";
-import useUserCurrentLocation from "./hooks/userCurrentLocation";
-import fixedCoordinateList, { FixedCoordinate } from './hooks/fetchCoordinates';
+import { fixedCoordinateList, FixedCoordinate } from './hooks/fetchCoordinates';
 
 type SpotProperties = {
   id: string;
@@ -35,22 +33,14 @@ const BaseMap = () => {
   const [destinationLatitude, setDestinationLatitude] = useState(0);
   const [destinationLongitude, setDestinationLongitude] = useState(0);
   const [navigationMapView, setNavigationMapView] = useState(false);
-  const [destinationMarker, setDestinationMarker] = useState(false)
 
   const { userLocation } = useUserCurrentLocation();
-  const { updatedUserLocation } = useUserTrackLocation();
-
-  const userInitialLatitude = userLocation?.coords.latitude ?? 0;
-  const userInitialLongitude = userLocation?.coords.longitude ?? 0;
-  console.log("lat", userInitialLatitude, "lon", userInitialLongitude)
-
-  const userLatitude = updatedUserLocation?.coords.latitude ?? 0;
-  const userLongitude = updatedUserLocation?.coords.longitude ?? 0;
-  console.log("updatedLat", userLatitude, "updateLon", userLongitude)
+  const userLatitude = userLocation?.coords.latitude ?? 0;
+  const userLongitude = userLocation?.coords.longitude ?? 0;
 
   const camera = useRef<Camera>(null);
 
-  const userLocationFetched = userInitialLatitude !== 0 && userInitialLongitude !== 0;
+  const userLocationFetched = userLatitude !== 0 && userLongitude !== 0;
 
   const generateSpotsNearLocation = (
     lat: number,
@@ -87,29 +77,38 @@ const BaseMap = () => {
   useEffect(() => {
     if (!userLocationFetched) return;
 
-    const locations: FixedCoordinate[] = fixedCoordinateList();
+    const loadSpots = async () => {
+      try {
+        const locations: FixedCoordinate[] = await fixedCoordinateList();
 
-    const allSpots = locations.flatMap((location) =>
-      generateSpotsNearLocation(
-        location.latitude,
-        location.longitude,
-        String(location.id)
-      )
-    );
+        const allSpots = locations.flatMap((location) =>
+          generateSpotsNearLocation(
+            location.latitude,
+            location.longitude,
+            String(location.id)
+          )
+        );
 
-    setSpots(allSpots);
+        setSpots(allSpots);
+      } catch (err) {
+        console.error("Failed to load spots:", err);
+      }
+    };
+
+    loadSpots();
   }, [userLocationFetched]);
 
   useEffect(() => {
     if (!userLocationFetched) return;
+
     camera.current?.setCamera({
-      centerCoordinate: [userInitialLongitude, userInitialLatitude],
+      centerCoordinate: [userLongitude, userLatitude],
       zoomLevel: 18,
       pitch: 54,
       heading: 0,
       animationDuration: 300,
     });
-  }, [userLocationFetched]);
+  }, [userLongitude, userLatitude]);
 
   const handleSelectSpot = (lat: number, lng: number, reserved?: boolean) => {
     if (reserved) {
@@ -126,9 +125,21 @@ const BaseMap = () => {
     setDestinationLongitude(lng);
 
     const freeSpots = spots.filter(s => !s.properties?.reserved);
+
     if (freeSpots.length > 0) {
-      const randomSpot = freeSpots[Math.floor(Math.random() * freeSpots.length)];
-      const [spotLng, spotLat] = randomSpot.geometry.coordinates;
+      const closestSpot = freeSpots.reduce((prev, curr) => {
+        const prevDistance = Math.sqrt(
+          Math.pow(prev.geometry.coordinates[1] - lat, 2) +
+          Math.pow(prev.geometry.coordinates[0] - lng, 2)
+        );
+        const currDistance = Math.sqrt(
+          Math.pow(curr.geometry.coordinates[1] - lat, 2) +
+          Math.pow(curr.geometry.coordinates[0] - lng, 2)
+        );
+        return currDistance < prevDistance ? curr : prev;
+      });
+
+      const [spotLng, spotLat] = closestSpot.geometry.coordinates;
       setDestinationLatitude(spotLat);
       setDestinationLongitude(spotLng);
     }
@@ -140,8 +151,6 @@ const BaseMap = () => {
     setShowNavigationButton(false);
     setNavigationMapView(true);
   };
-
-  console.log(userLocationFetched)
 
   if (navigationMapView && userLocationFetched && destinationLatitude !== 0 && destinationLongitude !== 0) {
     return (
@@ -163,35 +172,10 @@ const BaseMap = () => {
           scaleBarEnabled={false}
           logoPosition={Platform.OS === "android" ? { bottom: 40, left: 8 } : undefined}
           attributionPosition={Platform.OS === "android" ? { bottom: 40, right: 8 } : undefined}
-          onLongPress={(feature) => {
-            const gmetry = feature.geometry
-            // Check if gmetry is a point, if not return without doing anything
-            if (gmetry.type !== "Point") return;
-            const [lng, lat] = gmetry.coordinates;
-            setDestinationLatitude(lat);
-            setDestinationLongitude(lng);
-            setShowNavigationButton(true);
-            setDestinationMarker(true)
-          }
-          }
-          onPress={() => {
-            setShowNavigationButton(false);
-            setDestinationMarker(false);
-            setDestinationLatitude(0);
-            setDestinationLongitude(0);
-          }}
         >
-          {destinationMarker && (
-            <PointAnnotation
-              id="destination"
-              coordinate={[destinationLongitude, destinationLatitude]}
-            >
-              <Text style={styles.destinationMarkerText}>📌</Text>
-            </PointAnnotation>
-          )}
           <Camera
             ref={camera}
-            centerCoordinate={[userInitialLongitude, userInitialLatitude]}
+            centerCoordinate={[userLongitude, userLatitude]}
             zoomLevel={18}
             pitch={54}
             heading={0}
@@ -240,17 +224,7 @@ const styles = StyleSheet.create({
     borderWidth: 4,
     borderColor: "#FFFFFF"
   },
-  pinText: {
-    color: "#1C3557",
-    fontSize: 32
-  },
-  destinationMarkerText: {
-    color: "#1C3557",
-    fontSize: 24,
-    width: 32,
-    height: 30,
-    textAlign: 'center'
-  }
+  pinText: { color: "#1C3557", fontSize: 32 },
 });
 
 export default BaseMap;
