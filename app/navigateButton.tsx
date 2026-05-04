@@ -19,7 +19,7 @@ const NavigateButton = ({startNavigation}: NavigateButtonProps) => {
         navigationButton: {
             width: 256,
             position: "absolute",
-            bottom: 72,
+            bottom: 96,
             left: 32,
             backgroundColor: "#1C3557",
             paddingVertical: 24,

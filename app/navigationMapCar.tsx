@@ -35,8 +35,7 @@ const getDistanceMetres = (
     return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
-// How close (metres) the user must be to trigger the next step
-const STEP_ADVANCE_THRESHOLD = 30;
+const STEP_ADVANCE_THRESHOLD = 20;
 
 const NavigationMapCar = ({
     onToggleNavigation,
