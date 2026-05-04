@@ -6,7 +6,8 @@ import {
     Camera,
     ShapeSource,
     LineLayer,
-    UserLocation
+    UserLocation,
+    PointAnnotation
 } from "@rnmapbox/maps";
 import useRoute from "./hooks/fetchRoute";
 
@@ -35,7 +36,7 @@ const getDistanceMetres = (
 };
 
 // How close (metres) the user must be to trigger the next step
-const STEP_ADVANCE_THRESHOLD = 20;
+const STEP_ADVANCE_THRESHOLD = 30;
 
 const NavigationMapCar = ({
     onToggleNavigation,
@@ -57,6 +58,7 @@ const NavigationMapCar = ({
     );
 
     const steps = carRoute.routeInstructions;
+    console.log(steps)
     const currentStep = steps[currentStepIndex] ?? null;
     const isLastStep = currentStepIndex === steps.length - 1;
     const camera = useRef<Camera>(null);
@@ -121,17 +123,29 @@ const NavigationMapCar = ({
                     followUserLocation={followUser}
                     followZoomLevel={18}
                 />
-                <UserLocation />
+                <UserLocation
+                    androidRenderMode="gps"
+                    showsUserHeadingIndicator={true}
+                />
                 {carRoute.route && (
-                    <ShapeSource id="routeSource" shape={carRoute.route}>
+                    <ShapeSource
+                        id="routeSource"
+                        shape={carRoute.route}
+                        maxZoomLevel={18}
+                    >
                         <LineLayer
                             id="routeLine"
                             style={{ lineColor: "#F5A623", lineWidth: 8 }}
                         />
                     </ShapeSource>
                 )}
+                <PointAnnotation
+                    id="destinationPoint"
+                    coordinate={[destinationLongitude, destinationLatitude]}
+                >
+                    <Text style={{ fontSize: 24, width: 48, height: 30, textAlign: 'center' }}>♿</Text>
+                </PointAnnotation>
             </MapView>
-
             <TouchableOpacity style={styles.exitNavigationButton} onPress={onToggleNavigation}>
                 <Text style={styles.exitButtonText}>X</Text>
             </TouchableOpacity>
