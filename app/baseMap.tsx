@@ -14,6 +14,7 @@ import {
 } from "@rnmapbox/maps";
 import { Feature, Point } from "geojson";
 import useUserCurrentLocation from "./hooks/userCurrentLocation";
+import useUserTrackLocation from "./hooks/userTrackLocation";
 import ParkingSpots from "./ParkingSpots";
 import LocationMarkers from "./locationSpots";
 import EntranceLocationMarkers from "./entranceSpots";
@@ -27,38 +28,6 @@ type SpotProperties = {
   reserved?: boolean;
 };
 
-const generateSpotsNearLocation = (
-  lat: number,
-  lng: number,
-  locationId: string
-): Feature<Point, SpotProperties>[] => {
-  const spots = Array.from({ length: 5 }, (_, i) => ({
-    type: "Feature" as const,
-    geometry: {
-      type: "Point" as const,
-      coordinates: [
-        lng + Math.random() * 0.0003 * Math.cos(Math.random() * 2 * Math.PI),
-        lat + Math.random() * 0.0003 * Math.sin(Math.random() * 2 * Math.PI),
-      ],
-    },
-    properties: { id: `${locationId}-${i + 1}` },
-  }));
-
-  const reservedCount = Math.floor(Math.random() * 2) + 2;
-  const reservedIds = [...spots]
-    .sort(() => 0.5 - Math.random())
-    .slice(0, reservedCount)
-    .map((s) => s.properties.id);
-
-  return spots.map((spot) => ({
-    ...spot,
-    properties: {
-      ...spot.properties,
-      reserved: reservedIds.includes(spot.properties.id),
-    },
-  }));
-};
-
 const BaseMap = () => {
   const [spots, setSpots] = useState<Feature<Point, SpotProperties>[]>([]);
   const [showNavigationButton, setShowNavigationButton] = useState(false);
@@ -67,12 +36,51 @@ const BaseMap = () => {
   const [navigationMapView, setNavigationMapView] = useState(false);
 
   const { userLocation } = useUserCurrentLocation();
-  const userLatitude = userLocation?.coords.latitude ?? 0;
-  const userLongitude = userLocation?.coords.longitude ?? 0;
+  const { updatedUserLocation } = useUserTrackLocation();
+
+  const userInitialLatitude = userLocation?.coords.latitude ?? 0;
+  const userInitialLongitude = userLocation?.coords.longitude ?? 0;
+  console.log("lat", userInitialLatitude, "lon", userInitialLongitude)
+
+  const userLatitude = updatedUserLocation?.coords.latitude ?? 0;
+  const userLongitude = updatedUserLocation?.coords.longitude ?? 0;
+  console.log("updatedLat", userLatitude, "updateLon", userLongitude)
 
   const camera = useRef<Camera>(null);
 
-  const userLocationFetched = userLatitude !== 0 && userLongitude !== 0;
+  const userLocationFetched = userInitialLatitude !== 0 && userInitialLatitude !== 0;
+
+  const generateSpotsNearLocation = (
+    lat: number,
+    lng: number,
+    locationId: string
+  ): Feature<Point, SpotProperties>[] => {
+    const spots = Array.from({ length: 5 }, (_, i) => ({
+      type: "Feature" as const,
+      geometry: {
+        type: "Point" as const,
+        coordinates: [
+          lng + Math.random() * 0.0003 * Math.cos(Math.random() * 2 * Math.PI),
+          lat + Math.random() * 0.0003 * Math.sin(Math.random() * 2 * Math.PI),
+        ],
+      },
+      properties: { id: `${locationId}-${i + 1}` },
+    }));
+
+    const reservedCount = Math.floor(Math.random() * 2) + 2;
+    const reservedIds = [...spots]
+      .sort(() => 0.5 - Math.random())
+      .slice(0, reservedCount)
+      .map((s) => s.properties.id);
+
+    return spots.map((spot) => ({
+      ...spot,
+      properties: {
+        ...spot.properties,
+        reserved: reservedIds.includes(spot.properties.id),
+      },
+    }));
+  };
 
   useEffect(() => {
     if (!userLocationFetched) return;
@@ -80,6 +88,7 @@ const BaseMap = () => {
     const loadSpots = async () => {
       try {
         const locations: FixedCoordinate[] = await fixedCoordinateList();
+
         const allSpots = locations.flatMap((location) =>
           generateSpotsNearLocation(
             location.latitude,
@@ -87,6 +96,7 @@ const BaseMap = () => {
             String(location.id)
           )
         );
+
         setSpots(allSpots);
       } catch (err) {
         console.error("Failed to load spots:", err);
@@ -94,19 +104,19 @@ const BaseMap = () => {
     };
 
     loadSpots();
-  }, [userLocationFetched, navigationMapView]);
+  }, [userLocationFetched]);
 
   useEffect(() => {
     if (!userLocationFetched) return;
 
     camera.current?.setCamera({
-      centerCoordinate: [userLongitude, userLatitude],
+      centerCoordinate: [userInitialLongitude, userInitialLatitude],
       zoomLevel: 18,
       pitch: 54,
       heading: 0,
       animationDuration: 300,
     });
-  }, [userLongitude, userLatitude]);
+  }, [userLocationFetched]);
 
   const handleSelectSpot = (lat: number, lng: number, reserved?: boolean) => {
     if (reserved) {
@@ -173,7 +183,7 @@ const BaseMap = () => {
         >
           <Camera
             ref={camera}
-            centerCoordinate={[userLongitude, userLatitude]}
+            centerCoordinate={[userInitialLongitude, userInitialLatitude]}
             zoomLevel={18}
             pitch={54}
             heading={0}
