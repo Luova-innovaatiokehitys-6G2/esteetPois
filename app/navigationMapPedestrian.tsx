@@ -31,7 +31,6 @@ const NavigationMapPedestrian = ({
 
     const entranceCoordinates: EntranceCoordinate[] = fixedEntranceCordinateList();
 
-    // 🔹 Find the nearest entrance
     const nearestEntrance = entranceCoordinates.reduce((closest, entrance) => {
         const distance = getDistance(
             { latitude: startingLatitude, longitude: startingLongitude },
@@ -47,7 +46,6 @@ const NavigationMapPedestrian = ({
     const entranceLatitude = nearestEntrance?.entrance.latitude ?? entranceCoordinates[0].latitude;
     const entranceLongitude = nearestEntrance?.entrance.longitude ?? entranceCoordinates[0].longitude;
 
-    // 🔹 Hazard warning logic
     useEffect(() => {
         if (!startingLatitude || !startingLongitude) return;
 
@@ -90,12 +88,12 @@ const NavigationMapPedestrian = ({
                 </View>
             </SafeAreaView>
         );
+    } else {
+        return (
+            <SafeAreaView style={styles.container}>
+            </SafeAreaView>
+        );
     }
-
-    return (
-        <SafeAreaView style={styles.container}>
-        </SafeAreaView>
-    );
 };
 
 const styles = StyleSheet.create({

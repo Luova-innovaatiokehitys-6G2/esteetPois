@@ -7,7 +7,8 @@ import {
     ShapeSource,
     LineLayer,
     UserLocation,
-    PointAnnotation
+    PointAnnotation,
+    UserTrackingMode
 } from "@rnmapbox/maps";
 import useRoute from "./hooks/fetchRoute";
 
@@ -117,8 +118,12 @@ const NavigationMapCar = ({
             >
                 <Camera
                     ref={camera}
+                    animationMode="flyTo"
+                    animationDuration={1000}
                     followUserLocation={followUser}
+                    followUserMode={UserTrackingMode.FollowWithCourse}
                     followZoomLevel={18}
+                    followPitch={32}
                 />
                 <UserLocation
                     androidRenderMode="gps"
